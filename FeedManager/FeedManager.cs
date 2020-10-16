@@ -3,72 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
 using CodeHollow.FeedReader;
 using HtmlAgilityPack;
-using static Newtonsoft.Json.JsonConvert;
 
-public class Feed
-{
-    [Newtonsoft.Json.JsonIgnore]
-    public string ID { get; private set; }
-    public string FeedLink { get; set; }
-    public string Title { get; set; }
-    public string Link { get; set; }
-    public string ImagePath { get; set; }
-    public DateTime LastUpdated { get; set; }
-    public string Description { get; set; }
-    [Newtonsoft.Json.JsonIgnore]
-    public List<Post> Posts { get; } = new List<Post>();
-
-    public IReadOnlyList<Post> Unread => (from post in Posts where !post.Read select post).ToList().AsReadOnly();
-    public class Post
-    {
-        [Newtonsoft.Json.JsonIgnore]
-        public Feed ParentFeed { get; set; }
-        [Newtonsoft.Json.JsonIgnore]
-        public string ID { get; set; }
-        public string GUID { get; set; }
-        public string Title { get; set; }
-        public string Link { get; set; }
-        public DateTime Published { get; set; }
-        public string Description { get; set; }
-        public bool Read { get; set; }
-
-        public Post(Feed feed, string id)
-        {
-            this.ParentFeed = feed;
-            this.ID = id;
-        }
-
-        public override string ToString() => Title;
-        public string Serialize() => SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
-        public static Post Deserialize(Feed feed, string id, string json)
-        {
-            var post = DeserializeObject<Post>(json);
-            post.ParentFeed = feed;
-            post.ID = id;
-            return post;
-        }
-    }
-
-    public Feed(string id, string feed_link)
-    {
-        this.ID = id;
-        this.FeedLink = feed_link;
-    }
-
-    public override string ToString() => Title;
-    public string Serialize() => SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
-    public static Feed Deserialize(string id, string json)
-    {
-        var feed = DeserializeObject<Feed>(json);
-        feed.ID = id;
-        return feed;
-    }
-}
 
 public class FeedManager
 {
@@ -105,132 +43,138 @@ public class FeedManager
             Directory.CreateDirectory(directory);
     }
 
-    public void AddFeed(string feed_url)
+    public async Task AddFeedAsync(string feed_url)
     {
-        if (Feeds.Any(f => f.FeedLink == feed_url))
-            throw new Exception("There's already a feed with that url.");
-        else
+        var found_feed_urls = from url in await FeedReader.GetFeedUrlsFromUrlAsync(feed_url) select url.Url;
+        if (found_feed_urls.Count() > 0)
         {
-            var parsed_feed = FeedReader.Read(feed_url);
-            var feed_id = NormalizeFilename(parsed_feed.Title);
+            var blog_url = found_feed_urls.First();
+            feed_url = blog_url.StartsWith('/') ? $"{feed_url.TrimEnd('/')}{blog_url}" : blog_url;
+        }
 
-            int suffix = 0;
-            while (Directory.Exists(Path.Combine(FeedDirectory, $"{feed_id}{(suffix > 0 ? $"_{suffix}" : "")}.feed")))
-                suffix++;
-            feed_id = $"{feed_id}{(suffix > 0 ? $"_{suffix}" : "")}";
-
-            string feed_image_path = null;
-            if (!string.IsNullOrEmpty(parsed_feed.ImageUrl))
-            {
-                var downloader = new WebClient();
-                var image_extension = Path.GetExtension(parsed_feed.ImageUrl);
-                feed_image_path = $"{feed_id}{image_extension}";
-                downloader.DownloadFile(parsed_feed.ImageUrl, Path.Combine(FeedDirectory, feed_image_path));
-            }
+        if (Feeds.Any(f => f.FeedLink == feed_url))
+        {
+            throw new Exception("There's already a feed with that url.");
+        }
+        else
+        { 
+            var parsed_feed = await FeedReader.ReadAsync(feed_url);
 
             var feed_uri = new Uri(parsed_feed.Link);
+            var feed_title = string.IsNullOrWhiteSpace(parsed_feed.Title) ? feed_uri.Host : parsed_feed.Title;
+            var feed_id = AvoidFeedIdCollision(MakeSafeId(feed_title));
+
+            string feed_image_path = await DownloadFeedImageAsync(feed_id, parsed_feed.ImageUrl);
+
             var feed = new Feed(feed_id, feed_url)
             {
-                Title = parsed_feed.Title,
+                Title = feed_title,
                 Link = $"{feed_uri.Scheme}://{feed_uri.Host}",
                 ImagePath = feed_image_path,
-                LastUpdated = (DateTime)parsed_feed.LastUpdatedDate,
-                Description = NormalizeDescription(parsed_feed.Description)
+                LastUpdated = parsed_feed.LastUpdatedDate is null ? DateTime.Now : (DateTime)parsed_feed.LastUpdatedDate,
+                Description = ExtractTextFromHtml(parsed_feed.Description)
             };
 
-            using (var file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed_id}.feed")))
-                file.Write(feed.Serialize());
+            await WriteToFileAsync(Path.Combine(FeedDirectory, $"{feed_id}.feed"), feed.Serialize());
 
             Directory.CreateDirectory(Path.Combine(FeedDirectory, feed_id));
 
-            var markdown_converter = new ReverseMarkdown.Converter(
-                new ReverseMarkdown.Config() { UnknownTags = ReverseMarkdown.Config.UnknownTagsOption.Drop }
-            );
+            await AddPostsToFeedAsync(feed, parsed_feed.Items);
 
-            foreach (var item in parsed_feed.Items)
-            {
-                var post_id = NormalizeFilename(item.Title);
-
-                var post_content_path = Path.Combine(FeedDirectory, feed_id, $"{post_id}.content");
-                using (var file = new StreamWriter(post_content_path))
-                    file.Write(markdown_converter.Convert(item.Content.Trim()));
-
-                var post = new Feed.Post(feed, post_id)
-                {
-                    GUID = item.Id,
-                    Link = item.Link,
-                    Title = item.Title,
-                    Published = (DateTime)item.PublishingDate,
-                    Description = NormalizeDescription(item.Description),
-                };
-
-                using (var file = new StreamWriter(Path.Combine(FeedDirectory, feed_id, $"{post_id}.post")))
-                    file.Write(post.Serialize());
-
-                feed.Posts.Add(post);
-            }
             Feeds.Add(feed);
         }
+
+        string AvoidFeedIdCollision(string id)
+        {
+            var pre_path = Path.Combine(FeedDirectory, id);
+            if (Directory.Exists($"{pre_path}.feed"))
+            {
+                int suffix = 2;
+                while (Directory.Exists($"{pre_path}_{suffix}.feed"))
+                    suffix++;
+                id = $"{id}_{suffix}";
+            }
+            return id;
+        }
+
+        async Task<string> DownloadFeedImageAsync(string feed_id, string feed_image_url)
+        {
+            string feed_image_path = null;
+            if (!string.IsNullOrEmpty(feed_image_url))
+            {
+                var downloader = new WebClient();
+                string image_extension = ExtractExtensionFromUrl(feed_image_url);
+                feed_image_path = $"{feed_id}{image_extension}";
+                await downloader.DownloadFileTaskAsync(feed_image_url, Path.Combine(FeedDirectory, feed_image_path));
+            }
+
+            return feed_image_path;
+        }
     }
-    public void MarkPostRead(Feed.Post post)
+    public async Task FetchAndUpdateFeedAsync(Feed feed)
     {
-        post.Read = true;
-        using (var post_file = new StreamWriter(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post")))
-            post_file.Write(post.Serialize());
-    }
-    public void UpdateFeedMetadata(Feed feed)
-    {
-        using (var feed_file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed.ID}.feed")))
-            feed_file.Write(feed.Serialize());
-    }
-    public void FetchAndUpdateFeed(Feed feed)
-    {
-        var parsed_feed = FeedReader.Read(feed.FeedLink);
+        var parsed_feed = await FeedReader.ReadAsync(feed.FeedLink);
         var last_update = (DateTime)parsed_feed.LastUpdatedDate;
         if (last_update > feed.LastUpdated)
         {
             feed.LastUpdated = last_update;
             feed.Link = parsed_feed.Link;
-            feed.Description = NormalizeDescription(parsed_feed.Description);
+            feed.Description = ExtractTextFromHtml(parsed_feed.Description);
 
-            foreach (var item in parsed_feed.Items.Where(i => !feed.Posts.Any(p => p.GUID == i.Id)))
-            {
-                var post_id = NormalizeFilename(item.Title);
-
-                var post_content_path = Path.Combine(FeedDirectory, feed.ID, $"{post_id}.content");
-                using (var file = new StreamWriter(post_content_path))
-                    file.Write(item.Content);
-
-                var post = new Feed.Post(feed, post_id)
-                {
-                    GUID = item.Id,
-                    Link = item.Link,
-                    Title = item.Title,
-                    Published = (DateTime)item.PublishingDate,
-                    Description = NormalizeDescription(item.Description),
-                };
-
-                using (var file = new StreamWriter(Path.Combine(FeedDirectory, feed.ID, $"{post_id}.post")))
-                    file.Write(post.Serialize());
-
-                feed.Posts.Add(post);
-            }
+            await AddPostsToFeedAsync(feed, parsed_feed.Items.Where(i => !feed.Posts.Any(p => p.GUID == i.Id)));
         }
+    }
+    public async Task MarkPostReadAsync(Feed.Post post)
+    {
+        post.Read = true;
+        using (var post_file = new StreamWriter(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post")))
+            await post_file.WriteAsync(post.Serialize());
+    }
+    public async Task UpdateFeedMetadataAsync(Feed feed)
+    {
+        using (var feed_file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed.ID}.feed")))
+            await feed_file.WriteAsync(feed.Serialize());
     }
     public string LoadPostContent(Feed.Post post)
     {
         using (var content_file = new StreamReader(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.content")))
             return content_file.ReadToEnd();
     }
+    async Task AddPostsToFeedAsync(Feed feed, IEnumerable<FeedItem> feed_items)
+    {
+        foreach (var item in feed_items)
+        {
+            var post_title = ExtractTextFromHtml(item.Title);
+            var post_id    = MakeSafeId(post_title);
 
-    private static string NormalizeFilename(string path)
+            var post = new Feed.Post(feed, post_id)
+            {
+                GUID = item.Id,
+                Link = item.Link,
+                Title = post_title,
+                Published = (DateTime)item.PublishingDate,
+                Description = ExtractTextFromHtml(item.Description),
+            };
+
+            var post_content_filename = Path.Combine(FeedDirectory, feed.ID, post_id);
+
+            var post_content = (await EmbedImagesInHtmlAsync(item.Content is null ? item.Description : item.Content, post)).Trim();
+
+            await WriteToFileAsync($"{post_content_filename}.post", post.Serialize());
+            await WriteToFileAsync($"{post_content_filename}.content", post_content.Trim());
+
+            feed.Posts.Add(post);
+        }
+    }
+
+    static string MakeSafeId(string path)
     {
         char[] invalid_chars = Path.GetInvalidFileNameChars();
         foreach (char ch in invalid_chars)
             path = path.Replace(ch, '_');
-        return path.Replace(' ', '_').Replace('.', '_').ToLower();
+        return path.Replace(' ', '_').Replace('.', '_').ToLower().Substring(0, path.Length > 60? 60 : path.Length);
     }
-    private static string NormalizeDescription(string text)
+    static string ExtractTextFromHtml(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return null;
@@ -242,5 +186,47 @@ public class FeedManager
             text = System.Web.HttpUtility.HtmlDecode(text);
             return text.Trim();
         }
+    }
+    static async Task WriteToFileAsync(string filepath, string content)
+    {
+        using (var file = new StreamWriter(filepath))
+            await file.WriteAsync(content);
+    }
+    static string ExtractExtensionFromUrl(string url)
+    {
+        return string.Join("", Path.GetExtension(url).TakeWhile(c => c != '?'));
+    }
+    static async Task<string> EmbedImagesInHtmlAsync(string content, Feed.Post post)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(content);
+
+        var images = (from node in doc.DocumentNode.Descendants()
+                     where string.Equals(node.Name, "img", StringComparison.OrdinalIgnoreCase)
+                     select node).ToList();
+
+        var downloader = new WebClient();
+
+        foreach (var image in images)
+        {
+            var src = image.GetAttributeValue("src", "");
+            if (!src.StartsWith("data"))
+            {
+                try
+                {
+                    var image_extension = ExtractExtensionFromUrl(src).Substring(1);
+                    string image_data_base64;
+                    try { image_data_base64 = Convert.ToBase64String(await downloader.DownloadDataTaskAsync(src)); }
+                    catch {
+                        src = src.StartsWith('/') ? $"{post.ParentFeed.Link}{src}" : $"{post.Link.TrimEnd('/')}/{src}";
+                        image_data_base64 = Convert.ToBase64String(await downloader.DownloadDataTaskAsync(src));
+                    }
+                    image.SetAttributeValue("src", $"data:image/{image_extension};base64,{image_data_base64}");
+                }
+                catch { image.Remove(); }
+            }
+        }
+
+        return doc.DocumentNode.InnerHtml;
     }
 }
