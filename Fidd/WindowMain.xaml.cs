@@ -26,7 +26,7 @@ namespace Fidd
         {
             InitializeComponent();
             ListFeeds.LoadPosts = LoadPosts;
-            ListPosts.OpenPost = OpenPost;
+            ListPosts.OpenPost = OpenPostAsync;
         }
 
         public void LoadPosts(List<Feed.Post> posts, bool include_feed = false)
@@ -40,11 +40,11 @@ namespace Fidd
         {
             PostContent.Post = null;
         }
-        public void OpenPost(Feed.Post post)
+        public async Task OpenPostAsync(Feed.Post post)
         {
             PostContent.Post = post;
             Title = $"Fidd — {post.ParentFeed.Title} — {post.Title}";
-            App.Manager.MarkPostRead(post);
+            await App.FeedManager.MarkPostReadAsync(post);
             ListFeeds.UpdateListWhilePreservingSelection();
         }
     }

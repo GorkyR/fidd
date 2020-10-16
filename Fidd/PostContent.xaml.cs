@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Web;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,7 +14,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using MarkdownTransformer = Markdown.Xaml.Markdown;
 
 namespace Fidd
 {
@@ -22,10 +22,23 @@ namespace Fidd
     /// </summary>
     public partial class PostContent : UserControl
     {
-        public double PostMaxWidth { get; set; } = 800;
-        public double PostMinPadding { get; set; } = 24;
+        const int max_width = 800;
+        static string css_style = @$"
+            div.post-title, div.post-body {{ max-width: {max_width}px; margin: 0 auto; }}
+            body {{ font-family: Calibri, sans-serif; font-size: 20px; margin: 30px; }}
+            pre, code {{ font-family: Fira Code, monospace; font-size: 15px; color: #333; background-color: #eee; }}
+            a, a:visited {{ color: blue; text-decoration: none; }}
+            div.post-title > a {{ color: black; }}
+            div.post-title > a:hover {{ color: blue;  }}
+            div.post-title > a > h1 {{ font-size: 38px; font-weight: 800; }}
 
-        MarkdownTransformer markdown = new MarkdownTransformer();
+            div.post-body h1 {{ font-size: 32px; }}
+            div.post-body h2 {{ font-size: 28px; }}
+            div.post-body h3 {{ font-size: 25px; }}
+
+            img, figure {{ max-width: 100%; display: block; border-radius: 5px; }}
+            p > img {{ display: inline-block; }}
+        ";
 
         Feed.Post _post = null;
         public Feed.Post Post
@@ -33,15 +46,23 @@ namespace Fidd
             get => _post;
             set
             {
+                string content = "<html></html>";
                 if (value != null)
                 {
-                    var content = App.Manager.LoadPostContent(value).Replace("## ", "### ").Replace("# ", "## ");
-                    markdown.AssetPathRoot = value.Link;
-                    markdown.HyperlinkCommand = new HyperlinkHandler(value);
-                    var document = markdown.Transform($"# [{value.Title}]({value.Link})\n{content}");
-                    document.PagePadding = PaddingFromWidth(FlowContent.RenderSize.Width);
-                    FlowContent.Document = document;
+                    content = @$"
+                        <!doctype html>
+                        <html>
+                            <head>
+                                <meta charset=""UTF-8"">
+                                <style>{css_style}</style>
+                            </head>
+                            <body>
+                                <div class=""post-title""><a href=""{value.Link}""><h1>{value.Title}</h1></a></div>
+                                <div class=""post-body"">{App.FeedManager.LoadPostContent(value)}</div>
+                            </body>
+                        </html>";
                 }
+                WebContent.NavigateToString(content);
                 _post = value;
             }
         }
@@ -49,65 +70,21 @@ namespace Fidd
         public PostContent()
         {
             InitializeComponent();
-            markdown.DocumentStyle  = Resources["DocumentStyle"] as Style;
-            markdown.Heading1Style  = Resources["H1Style"] as Style;
-            markdown.Heading2Style  = Resources["H2Style"] as Style;
-            markdown.Heading3Style  = Resources["H3Style"] as Style;
-            markdown.Heading4Style  = Resources["H4Style"] as Style;
-            markdown.LinkStyle      = Resources["LinkStyle"] as Style;
-            markdown.ImageStyle     = Resources["ImageStyle"] as Style;
-            markdown.SeparatorStyle = Resources["SeparatorStyle"] as Style;
-            markdown.CodeStyle      = Resources["CodeStyle"] as Style;
         }
 
-        private void LinkClicked(object sender, NavigatingCancelEventArgs e)
+        private void Navigating(object sender, NavigatingCancelEventArgs e)
         {
             if (e.Uri != null)
             {
                 e.Cancel = true;
                 var url = e.Uri.ToString();
-                Process.Start("explorer", url);
+                Process.Start(
+                    new ProcessStartInfo(
+                        "cmd", 
+                        $"/c start {url.Replace("&", "^&")}"
+                    ) { CreateNoWindow = true }
+                );
             }
-        }
-
-        Thickness PaddingFromWidth(double width)
-        {
-            var horizontal_padding = (width - PostMaxWidth) / 2;
-            horizontal_padding = horizontal_padding > PostMinPadding
-                ? horizontal_padding
-                : PostMinPadding;
-            return new Thickness(
-                left : horizontal_padding,
-                right: horizontal_padding,
-                top   : PostMinPadding,
-                bottom: PostMinPadding
-            );
-        }
-        private void PostSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (FlowContent != null)
-                if (FlowContent.Document != null)
-                    FlowContent.Document.PagePadding = PaddingFromWidth(e.NewSize.Width);
-        }
-    }
-
-    class HyperlinkHandler : ICommand
-    {
-        public string Root { get; set; }
-        public event EventHandler CanExecuteChanged;
-
-        public HyperlinkHandler(Feed.Post post)
-        {
-            var feed_uri = new Uri(post.ParentFeed.Link);
-            Root = $"{feed_uri.Scheme}://{feed_uri.Host}";
-        }
-        public bool CanExecute(object parameter) => parameter is null? true : (parameter is string);
-        public void Execute(object parameter)
-        {
-            var url = parameter as string;
-            if (url.StartsWith("/"))
-                url = $"{Root}{url}";
-            Process.Start("explorer", url);
         }
     }
 }

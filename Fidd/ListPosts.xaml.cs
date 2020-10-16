@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -32,18 +33,18 @@ namespace Fidd
             }
         }
 
-        public Action<Feed.Post> OpenPost { get; set; }
+        public Func<Feed.Post, Task> OpenPost { get; set; }
         public ListPosts()
         {
             InitializeComponent();
         }
 
-        private void SelectedPostChanged(object sender, SelectionChangedEventArgs e)
+        private async void SelectedPostChangedAsync(object sender, SelectionChangedEventArgs e)
         {
             if (ListViewPosts.SelectedIndex != -1)
             {
                 var selected_post = ListViewPosts.SelectedItem as ItemPost;
-                OpenPost?.Invoke(selected_post.Post);
+                await OpenPost?.Invoke(selected_post.Post);
                 selected_post.Read = true;
             }
         }

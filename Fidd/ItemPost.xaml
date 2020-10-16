@@ -45,7 +45,7 @@
                             Text="Description of the post goes here, you know how it is?  Yeah, here goes the motherfucking description. YeeeeaH!"
                             TextWrapping="Wrap"/>
             </Grid>
-            <Rectangle x:Name="Fade" Fill="#7FFFFFFF" Visibility="Hidden"/>
+            <Rectangle x:Name="Fade" Fill="#66FFFFFF" Visibility="Hidden"/>
         </Grid>
     </Border>
 </UserControl>

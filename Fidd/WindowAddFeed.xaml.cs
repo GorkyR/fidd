@@ -20,20 +20,22 @@ namespace Fidd
         public WindowAddFeed()
         {
             InitializeComponent();
+            EditFeedUrl.Focus();
         }
 
-        private void AddFeedCommand(object sender, RoutedEventArgs e)
+        private async void AddFeedCommand(object sender, RoutedEventArgs e)
         {
+            EditFeedUrl.IsEnabled = ButtonAdd.IsEnabled = false;
+            ProgressWorking.Visibility = Visibility.Visible;
             try
             {
-                App.Manager.AddFeed(EditFeedUrl.Text);
+                await App.FeedManager.AddFeedAsync(EditFeedUrl.Text);
                 MessageBox.Show("Feed added succesfully.", "Sucess", MessageBoxButton.OK, MessageBoxImage.Information);
-                this.Close();
+                Close();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            catch (Exception ex) { MessageBox.Show($"Error:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Information); }
+            ProgressWorking.Visibility = Visibility.Hidden;
+            EditFeedUrl.IsEnabled = ButtonAdd.IsEnabled = true;
         }
     }
 }

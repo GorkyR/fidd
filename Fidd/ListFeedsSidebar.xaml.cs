@@ -43,7 +43,7 @@ namespace Fidd
         private void UpdateFeedList()
         {
             PanelSubscriptions.Children.Clear();
-            foreach (var feed in App.Manager.Feeds)
+            foreach (var feed in App.FeedManager.Feeds)
             {
                 var feed_item = new ItemFeed()
                 {
@@ -58,7 +58,7 @@ namespace Fidd
                 };
                 PanelSubscriptions.Children.Add(feed_item);
             }
-            FeedFilterUnread.Unread = App.Manager.Posts.Where(p => !p.Read).Count();
+            FeedFilterUnread.Unread = App.FeedManager.Posts.Where(p => !p.Read).Count();
         }
 
         private void FilterClicked(object sender, RoutedEventArgs e)
@@ -67,21 +67,23 @@ namespace Fidd
             if (sender == FeedFilterAll)
             {
                 FeedFilterAll.Selected = true;
-                LoadPosts?.Invoke(App.Manager.Posts, true);
+                LoadPosts?.Invoke(App.FeedManager.Posts, true);
             }
             else
             {
                 FeedFilterUnread.Selected = true;
-                LoadPosts?.Invoke(App.Manager.Posts.Where(p => !p.Read).ToList(), true);
+                LoadPosts?.Invoke(App.FeedManager.Posts.Where(p => !p.Read).ToList(), true);
             }
         }
 
         public void UpdateListWhilePreservingSelection()
         {
-            var prev_filter = FeedFilterAll.Selected ? FeedFilterAll
+            var prev_filter = FeedFilterAll.Selected
+                ? FeedFilterAll
                 : (FeedFilterUnread.Selected ? FeedFilterUnread
                 : null);
-            var prev_feed = prev_filter is null ? (from item in PanelSubscriptions.Children.Cast<ItemFeed>() where item.Selected select item.Title).First()
+            var prev_feed = prev_filter is null
+                ? (from item in PanelSubscriptions.Children.Cast<ItemFeed>() where item.Selected select item.Title).First()
                 : null;
 
             UpdateFeedList();

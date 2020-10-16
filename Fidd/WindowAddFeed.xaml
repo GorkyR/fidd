@@ -9,6 +9,11 @@
     <StackPanel Orientation="Vertical" Margin="8">
         <TextBlock Text="Feed URL: "/>
         <TextBox x:Name="EditFeedUrl" Margin="0, 4"/>
-        <Button Content="Add Feed" HorizontalAlignment="Right" Click="AddFeedCommand"/>
+        <Button x:Name="ButtonAdd" IsDefault="True" HorizontalAlignment="Right" Click="AddFeedCommand">
+            <Grid>
+                <ProgressBar x:Name="ProgressWorking" IsIndeterminate="True" Visibility="Hidden"/>
+                <TextBlock Text="Add Feed"/>
+            </Grid>
+        </Button>
     </StackPanel>
 </Window>
