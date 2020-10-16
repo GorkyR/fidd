@@ -18,22 +18,21 @@ namespace Fidd
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class WindowMain : Window
     {
         public FeedManager FeedManager = new FeedManager("Feeds");
 
-        public MainWindow()
+        public WindowMain()
         {
             InitializeComponent();
-            ListFeeds.Feeds = App.Manager.Feeds;
-            ListFeeds.UpdatePosts = UpdatePosts;
+            ListFeeds.LoadPosts = LoadPosts;
             ListPosts.OpenPost = OpenPost;
         }
 
-        public void UpdatePosts(List<Feed.Post> posts, bool include_feed = false)
+        public void LoadPosts(List<Feed.Post> posts, bool include_feed = false)
         {
             ClosePost();
-            ListPosts.IncludeFeed = include_feed;
+            ListPosts.DisplayFeedTitle = include_feed;
             ListPosts.Posts = posts;
         }
 
@@ -44,6 +43,9 @@ namespace Fidd
         public void OpenPost(Feed.Post post)
         {
             PostContent.Post = post;
+            Title = $"Fidd — {post.ParentFeed.Title} — {post.Title}";
+            App.Manager.MarkPostRead(post);
+            ListFeeds.UpdateListWhilePreservingSelection();
         }
     }
 }

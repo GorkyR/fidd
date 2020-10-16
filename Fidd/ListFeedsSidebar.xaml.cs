@@ -19,54 +19,91 @@ namespace Fidd
     /// </summary>
     public partial class ListFeedsSidebar : UserControl
     {
-        List<Feed> _feeds = null;
-        public List<Feed> Feeds
-        {
-            get => _feeds;
+        Action<List<Feed.Post>, bool> _update_posts = null;
+        public Action<List<Feed.Post>, bool> LoadPosts {
+            get => _update_posts;
             set {
-                ListSubscriptions.ItemsSource =
-                    (from feed in value
-                     select new ItemFeed() {
-                         Title = feed.Title,
-                         Unread = feed.Unread.Count
-                     }).ToList();
-                _feeds = value;
+                _update_posts = value;
+                UpdateFeedList();
+                FilterClicked(FeedFilterAll, null);
             }
         }
-        public Action<List<Feed.Post>, bool> UpdatePosts { get; set; }
         public ListFeedsSidebar()
         {
             InitializeComponent();
+            UpdateFeedList();
+        }
+        private void ClearSelectedFeeds()
+        {
+            FeedFilterAll.Selected = false;
+            FeedFilterUnread.Selected = false;
+            foreach (ItemFeed feed_item in PanelSubscriptions.Children)
+                feed_item.Selected = false;
+        }
+        private void UpdateFeedList()
+        {
+            PanelSubscriptions.Children.Clear();
+            foreach (var feed in App.Manager.Feeds)
+            {
+                var feed_item = new ItemFeed()
+                {
+                    Title = feed.Title,
+                    Unread = feed.Unread.Count
+                };
+                feed_item.Click += (s, e) =>
+                {
+                    ClearSelectedFeeds();
+                    feed_item.Selected = true;
+                    LoadPosts?.Invoke(feed.Posts, false);
+                };
+                PanelSubscriptions.Children.Add(feed_item);
+            }
+            FeedFilterUnread.Unread = App.Manager.Posts.Where(p => !p.Read).Count();
         }
 
-        private void FilterSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FilterClicked(object sender, RoutedEventArgs e)
         {
-            if (ListFilters.SelectedIndex != -1)
+            ClearSelectedFeeds();
+            if (sender == FeedFilterAll)
             {
-                if (!(ListSubscriptions is null))
-                    ListSubscriptions.SelectedIndex = -1;
-                if (UpdatePosts != null)
-                {
-                    var index = ListFilters.SelectedIndex;
-                    if (index == 0)
-                        UpdatePosts(App.Manager.Posts.OrderByDescending(p => p.Published).ToList(), true);
-                    else if (index == 1)
-                        UpdatePosts((from post in App.Manager.Posts where !post.Read select post).ToList(), true);
-                }
+                FeedFilterAll.Selected = true;
+                LoadPosts?.Invoke(App.Manager.Posts, true);
+            }
+            else
+            {
+                FeedFilterUnread.Selected = true;
+                LoadPosts?.Invoke(App.Manager.Posts.Where(p => !p.Read).ToList(), true);
             }
         }
 
-        private void FeedSelectionChanged(object sender, SelectionChangedEventArgs e)
+        public void UpdateListWhilePreservingSelection()
         {
-            if (ListSubscriptions.SelectedIndex != -1)
+            var prev_filter = FeedFilterAll.Selected ? FeedFilterAll
+                : (FeedFilterUnread.Selected ? FeedFilterUnread
+                : null);
+            var prev_feed = prev_filter is null ? (from item in PanelSubscriptions.Children.Cast<ItemFeed>() where item.Selected select item.Title).First()
+                : null;
+
+            UpdateFeedList();
+
+            if (prev_filter != null)
+                prev_filter.Selected = true;
+            else
             {
-                ListFilters.SelectedIndex = -1;
-                if (UpdatePosts != null)
-                {
-                    var index = ListSubscriptions.SelectedIndex;
-                    UpdatePosts(Feeds[index].Posts, false);
-                }
+                var prev_selected =
+                    (from item in PanelSubscriptions.Children.Cast<ItemFeed>()
+                     where item.Title == prev_feed
+                     select item).First();
+                prev_selected.Selected = true;
             }
+        }
+        
+        private void AddFeedCommand(object sender, RoutedEventArgs e)
+        {
+            var add_feed_window = new WindowAddFeed();
+            add_feed_window.ShowDialog();
+
+            UpdateListWhilePreservingSelection();
         }
     }
 }

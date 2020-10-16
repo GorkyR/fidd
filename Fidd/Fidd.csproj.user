@@ -22,6 +22,9 @@
     <Compile Update="PostContent.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="WindowAddFeed.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="ItemFeed.xaml">
@@ -30,7 +33,10 @@
     <Page Update="ItemPost.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="MainWindow.xaml">
+    <Page Update="Markdown.Style.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="WindowMain.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="ListPosts.xaml">
@@ -40,6 +46,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="PostContent.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="WindowAddFeed.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

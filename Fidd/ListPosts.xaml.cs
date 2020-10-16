@@ -19,7 +19,7 @@ namespace Fidd
     /// </summary>
     public partial class ListPosts : UserControl
     {
-        public bool IncludeFeed { get; set; }
+        public bool DisplayFeedTitle { get; set; }
 
         List<Feed.Post> _posts = null;
         public List<Feed.Post> Posts
@@ -27,14 +27,7 @@ namespace Fidd
             get => _posts;
             set
             {
-                ListViewPosts.ItemsSource =
-                    (from post in value
-                     select new ItemPost() {
-                         Title = post.Title,
-                         Description = post.Description,
-                         Feed = IncludeFeed? post.ParentFeed.Title : null,
-                         Post = post
-                     }).ToList();
+                ListViewPosts.ItemsSource = from post in value select new ItemPost(post, DisplayFeedTitle);
                 _posts = value;
             }
         }
@@ -48,7 +41,11 @@ namespace Fidd
         private void SelectedPostChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ListViewPosts.SelectedIndex != -1)
-                OpenPost?.Invoke((ListViewPosts.SelectedItem as ItemPost).Post);
+            {
+                var selected_post = ListViewPosts.SelectedItem as ItemPost;
+                OpenPost?.Invoke(selected_post.Post);
+                selected_post.Read = true;
+            }
         }
     }
 }

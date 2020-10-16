@@ -6,7 +6,10 @@
              xmlns:local="clr-namespace:Fidd"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary Source="Markdown.Style.xaml"/>
+    </UserControl.Resources>
     <Grid>
-        
+        <FlowDocumentScrollViewer Name="FlowContent" SizeChanged="PostSizeChanged"/>
     </Grid>
 </UserControl>

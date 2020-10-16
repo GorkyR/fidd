@@ -6,13 +6,24 @@
              xmlns:local="clr-namespace:Fidd"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
-    <StackPanel Orientation="Vertical">
-        <ListView x:Name="ListFilters" SelectedIndex="0" SelectionChanged="FilterSelectionChanged">
-            <local:ItemFeed Title="Latest"/>
-            <local:ItemFeed Title="Unread"/>
-            <local:ItemFeed Title="Favorites"/>
-        </ListView>
-        <TextBlock Text="Subscriptions"/>
-        <ListView x:Name="ListSubscriptions" SelectionChanged="FeedSelectionChanged"/>
-    </StackPanel>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <local:ItemFeed x:Name="FeedFilterAll" Title="All" Grid.ColumnSpan="100" Grid.Row="0" Click="FilterClicked"/>
+        <local:ItemFeed x:Name="FeedFilterUnread" Title="Unread" Grid.ColumnSpan="100" Grid.Row="1" Click="FilterClicked"/>
+        <DockPanel Grid.ColumnSpan="100" Grid.Row="2" Margin="4">
+            <Button DockPanel.Dock="Right" Content="Add" Padding="3, 0" Click="AddFeedCommand"/>
+            <TextBlock Text="Subscriptions"/>
+        </DockPanel>
+        <StackPanel x:Name="PanelSubscriptions" Orientation="Vertical" Grid.Column="1" Grid.Row="3"/>
+    </Grid>
 </UserControl>

@@ -4,15 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Fidd"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             mc:Ignorable="d"
+             d:DesignWidth="200">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
+        <Grid Margin="4, 6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-        <TextBlock x:Name="TextFeedName" HorizontalAlignment="Stretch" Grid.Column="0"/>
-        <TextBlock x:Name="TextUnread" DockPanel.Dock="Right" Visibility="Collapsed" Grid.Column="1"/>
+            <TextBlock x:Name="TextFeedName" Text="Feed Title" HorizontalAlignment="Stretch" Grid.Column="0" FontWeight="Medium"/>
+            <Rectangle x:Name="BoxUnread"  Fill="#7F000000" Width="18" Height="15" RadiusX="5" RadiusY="5" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock x:Name="TextUnread" Text="0" FontSize="11" Foreground="White" Margin="0, 0, 0, 1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+        <Rectangle x:Name="Overlay" Fill="#3F0064FF" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" Opacity="0"/>
     </Grid>
 </UserControl>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,14 +48,27 @@ namespace Fidd
                 }
             }
         }
+
+        CultureInfo us_format = new CultureInfo("en-US");
+
         DateTime date;
         public DateTime Published
         {
             get => date;
             set
             {
-                TextDate.Text = value.ToShortDateString();
+                TextDate.Text = value.ToString("d MMM yyyy, h:mmtt", us_format);
                 date = value;
+            }
+        }
+
+        bool _read;
+        public bool Read {
+            get => _read;
+            set
+            {
+                Fade.Visibility = value? Visibility.Visible : Visibility.Hidden;
+                _read = value;
             }
         }
 
@@ -85,6 +99,15 @@ namespace Fidd
 
             Feed = null;
             Author = null;
+        }
+        public ItemPost(Feed.Post post, bool display_feed_title) : this()
+        {
+            Post        = post;
+            Title       = post.Title;
+            Description = post.Description;
+            Published   = post.Published;
+            Read        = post.Read;
+            Feed        = display_feed_title? post.ParentFeed?.Title : null;
         }
     }
 }

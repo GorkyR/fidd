@@ -75,7 +75,7 @@ public class FeedManager
     public string FeedDirectory { get; set; }
     public List<Feed> Feeds { get; } = new List<Feed>();
 
-    public List<Feed.Post> Posts => (from feed in Feeds from post in feed.Posts select post).ToList();
+    public List<Feed.Post> Posts => (from feed in Feeds from post in feed.Posts orderby post.Published descending select post).ToList();
 
     public FeedManager(string directory)
     {
@@ -128,10 +128,11 @@ public class FeedManager
                 downloader.DownloadFile(parsed_feed.ImageUrl, Path.Combine(FeedDirectory, feed_image_path));
             }
 
+            var feed_uri = new Uri(parsed_feed.Link);
             var feed = new Feed(feed_id, feed_url)
             {
                 Title = parsed_feed.Title,
-                Link = parsed_feed.Link,
+                Link = $"{feed_uri.Scheme}://{feed_uri.Host}",
                 ImagePath = feed_image_path,
                 LastUpdated = (DateTime)parsed_feed.LastUpdatedDate,
                 Description = NormalizeDescription(parsed_feed.Description)
@@ -142,7 +143,9 @@ public class FeedManager
 
             Directory.CreateDirectory(Path.Combine(FeedDirectory, feed_id));
 
-            var markdown_converter = new ReverseMarkdown.Converter();
+            var markdown_converter = new ReverseMarkdown.Converter(
+                new ReverseMarkdown.Config() { UnknownTags = ReverseMarkdown.Config.UnknownTagsOption.Drop }
+            );
 
             foreach (var item in parsed_feed.Items)
             {
