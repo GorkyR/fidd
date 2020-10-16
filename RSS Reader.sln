@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeedManager", "FeedManager\FeedManager.csproj", "{7D150971-0537-4FB5-93FB-3B4927D5630A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fidd", "Fidd\Fidd.csproj", "{4D751026-7F4C-40CD-AED8-93FEC86A8C4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fidd", "Fidd\Fidd.csproj", "{4D751026-7F4C-40CD-AED8-93FEC86A8C4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeedManagerTester", "FeedManagerTester\FeedManagerTester.csproj", "{79196AE9-D235-462A-970B-925F681B4831}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{4D751026-7F4C-40CD-AED8-93FEC86A8C4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D751026-7F4C-40CD-AED8-93FEC86A8C4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D751026-7F4C-40CD-AED8-93FEC86A8C4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79196AE9-D235-462A-970B-925F681B4831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79196AE9-D235-462A-970B-925F681B4831}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79196AE9-D235-462A-970B-925F681B4831}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79196AE9-D235-462A-970B-925F681B4831}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
