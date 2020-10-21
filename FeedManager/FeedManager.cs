@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHollow.FeedReader;
 using HtmlAgilityPack;
-
+using Newtonsoft.Json;
 
 public class FeedManager
 {
@@ -72,7 +74,7 @@ public class FeedManager
             var feed_title = string.IsNullOrWhiteSpace(parsed_feed.Title) ? feed_uri.Host : parsed_feed.Title;
             var feed_id = AvoidFeedIdCollision(MakeSafeId(feed_title));
 
-            string feed_image_path = await DownloadFeedImageAsync(feed_id, parsed_feed.ImageUrl);
+            string feed_image_path = await DownloadFeedImageAsync(feed_id, parsed_feed.ImageUrl, feed_uri.Host);
 
             var feed = new Feed(feed_id, feed_url)
             {
@@ -105,15 +107,38 @@ public class FeedManager
             return id;
         }
 
-        async Task<string> DownloadFeedImageAsync(string feed_id, string feed_image_url)
+        async Task<string> DownloadFeedImageAsync(string feed_id, string feed_image_url, string feed_host)
         {
             string feed_image_path = null;
+            if (string.IsNullOrEmpty(feed_image_url))
+            {
+                try
+                {
+                    var web_client = new WebClient();
+                    web_client.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0");
+                    var favicon_api_response = await web_client.DownloadStringTaskAsync($"http://favicongrabber.com/api/grab/{feed_host}");
+                    var deserialized_response = JsonConvert.DeserializeObject<FaviconGrabberResponse>(favicon_api_response);
+                    if (deserialized_response.Icons.Count > 0)
+                        feed_image_url = deserialized_response.Icons.First().Source;
+                } catch(Exception e) { ; }
+            }
             if (!string.IsNullOrEmpty(feed_image_url))
             {
-                var downloader = new WebClient();
-                string image_extension = ExtractExtensionFromUrl(feed_image_url);
-                feed_image_path = $"{feed_id}{image_extension}";
-                await downloader.DownloadFileTaskAsync(feed_image_url, Path.Combine(FeedDirectory, feed_image_path));
+                if (feed_image_url.StartsWith("data:image/"))
+                {
+                    feed_image_url = feed_image_url.Substring(11);
+                    var image_extension = feed_image_url.Substring(0, feed_image_url.IndexOf(';'));
+                    feed_image_path = $"{feed_id}.{image_extension}";
+                    var image_data_base64 = feed_image_url.Substring(feed_image_url.IndexOf(',') + 1);
+                    await File.WriteAllBytesAsync(Path.Combine(FeedDirectory, feed_image_path), Convert.FromBase64String(image_data_base64));
+                }
+                else
+                {
+                    var downloader = new WebClient();
+                    string image_extension = ExtractExtensionFromUrl(feed_image_url);
+                    feed_image_path = $"{feed_id}{image_extension}";
+                    await downloader.DownloadFileTaskAsync(feed_image_url, Path.Combine(FeedDirectory, feed_image_path));
+                }
             }
 
             return feed_image_path;
@@ -217,12 +242,16 @@ public class FeedManager
 
             var post_content_filename = Path.Combine(FeedDirectory, feed.ID, post_id);
 
-            var post_content = (await ProcessHtmlAsync(item.Content is null ? item.Description : item.Content, post)).Trim();
+            try
+            {
+                var post_content = (await ProcessHtmlAsync(item.Content is null ? item.Description : item.Content, post)).Trim();
 
-            await WriteToFileAsync($"{post_content_filename}.post", post.Serialize());
-            await WriteToFileAsync($"{post_content_filename}.content", post_content.Trim());
+                await WriteToFileAsync($"{post_content_filename}.post", post.Serialize());
+                await WriteToFileAsync($"{post_content_filename}.content", post_content.Trim());
 
-            feed.Posts.Add(post);
+                feed.Posts.Add(post);
+            }
+            catch (Exception e) { ; }
         }
     }
 
@@ -262,7 +291,7 @@ public class FeedManager
 
         void RemoveElementsNamed(string name)
         {
-            foreach (var node in doc.DocumentNode.Descendants(name))
+            foreach (var node in doc.DocumentNode.Descendants(name).ToList())
                 node.Remove();
         }
 
@@ -271,7 +300,11 @@ public class FeedManager
         RemoveElementsNamed("style");
 
         foreach (var node in doc.DocumentNode.Descendants())
+        {
             node.Attributes.Remove("style");
+            node.Attributes.Remove("srcset");
+            node.Attributes.Remove("class");
+        }
 
         var images = doc.DocumentNode.Descendants("img").ToList();
 
@@ -298,5 +331,18 @@ public class FeedManager
         }
 
         return doc.DocumentNode.InnerHtml;
+    }
+}
+
+public class FaviconGrabberResponse
+{
+    public string Domain { get; set; }
+    public List<FaviconGrabberResponseIcons> Icons { get; set; }
+
+    public class FaviconGrabberResponseIcons
+    {
+        [JsonProperty("src")] public string Source { get; set; }
+        public string Type { get; set; }
+        public string Sizes { get; set; }
     }
 }

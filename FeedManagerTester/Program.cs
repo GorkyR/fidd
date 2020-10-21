@@ -6,9 +6,10 @@ namespace FeedManagerTester
     {
         static void Main(string[] args)
         {
-            var feed_manager = new FeedManager(Environment.ExpandEnvironmentVariables("Feeds"));
-            try { feed_manager.AddFeedAsync("tonsky.me").Wait(); } catch { }
-            try { feed_manager.AddFeedAsync("deathisbadblog.com").Wait(); } catch { }
+            var feed_manager = new FeedManager("Feeds");
+            try { feed_manager.AddFeedAsync("tonsky.me").Wait(); } catch (Exception e) { ; }
+            try { feed_manager.AddFeedAsync("devonzuegel.com").Wait(); } catch (Exception e) { ; }
+            try { feed_manager.AddFeedAsync("slatestarcodex.com").Wait(); } catch (Exception e) { ; }
         }
     }
 }
