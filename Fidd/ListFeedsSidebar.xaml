@@ -20,14 +20,21 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <local:ItemFeed x:Name="FeedFilterUnread"    Title="Unread"     Grid.ColumnSpan="100" Grid.Row="0" Click="FilterClicked"/>
-        <local:ItemFeed x:Name="FeedFilterAll"       Title="All Posts"  Grid.ColumnSpan="100" Grid.Row="1" Click="FilterClicked"/>
-        <local:ItemFeed x:Name="FeedFilterBookmarks" Title="Bookmarked" Grid.ColumnSpan="100" Grid.Row="2" Click="FilterClicked"/>
+        <local:ItemFeed x:Name="FeedFilterUnread"    Title="Unread"     Icon="/Icons/unread.png"    Grid.ColumnSpan="100" Grid.Row="0" Click="FilterClicked"/>
+        <local:ItemFeed x:Name="FeedFilterAll"       Title="All Posts"  Icon="/Icons/list.png"      Grid.ColumnSpan="100" Grid.Row="1" Click="FilterClicked"/>
+        <local:ItemFeed x:Name="FeedFilterBookmarks" Title="Bookmarked" Icon="/Icons/bookmark.png"  Grid.ColumnSpan="100" Grid.Row="2" Click="FilterClicked"/>
         <DockPanel Grid.ColumnSpan="100" Grid.Row="3">
-            <Button DockPanel.Dock="Right" Content="Add" Padding="3, 0" Click="AddFeedCommand"/>
+            <Button DockPanel.Dock="Right" Padding="3, 0" Click="AddFeedCommand" ToolTip="Add feed...">
+                <Image Source="/Icons/add.png" Width="12" Margin="2, 0"/>
+            </Button>
             <TextBlock Text="Subscriptions" Margin="4"/>
         </DockPanel>
         <StackPanel x:Name="PanelSubscriptions" Orientation="Vertical" Grid.Column="1" Grid.Row="4"/>
-        <Button Content="Update Feeds" Grid.Row="5" Grid.ColumnSpan="100" Click="UpdateFeedsContent"/>
+        <Button Grid.Row="5" Grid.ColumnSpan="100" Click="UpdateFeedsContent">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Update Feeds"/>
+                <Image Source="/Icons/sync.png" Height="11" Width="11" Margin="4, 0, 0, 0"/>
+            </StackPanel>
+        </Button>
     </Grid>
 </UserControl>

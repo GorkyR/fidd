@@ -29,20 +29,28 @@
         <TextBlock Text="ID" Grid.Column="0" Grid.Row="0"/>
         <TextBlock Text="{Binding Feed.ID}" Grid.Column="2" Grid.Row="0" IsEnabled="False"/>
 
-        <TextBlock Text="Title" Grid.Column="0" Grid.Row="2"
+        <Border Grid.Column="0" Grid.Row="2" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="5">
+            <Image x:Name="ImageFeedIcon"
+               HorizontalAlignment="Center" Width="70" Height="70"
+               Source="/Icons/no_image.png" ClipToBounds="True"/>
+        </Border>
+        <StackPanel Grid.Column="2" Grid.Row="2"
+                    HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Button Content="Change feed image..." Margin="2" Click="ChangeFeedImage"/>
+            <Button x:Name="ButtonRemoveImage" Content="Remove feed image"    Margin="2" Click="RemoveFeedImage" IsEnabled="False"/>
+        </StackPanel>
+
+        <TextBlock Text="Title" Grid.Column="0" Grid.Row="4"
                    VerticalAlignment="Center"/>
-        <TextBox   Text="{Binding Feed.Title}" Grid.Column="2" Grid.Row="2" 
+        <TextBox   Text="{Binding Feed.Title}" Grid.Column="2" Grid.Row="4" 
                    FontWeight="Medium" FontSize="16"/>
 
-        <TextBlock Text="Link" Grid.Column="0" Grid.Row="4"/>
-        <TextBox   Text="{Binding Feed.Link}" Grid.Column="2" Grid.Row="4"/>
+        <TextBlock Text="Link" Grid.Column="0" Grid.Row="6"/>
+        <TextBox   Text="{Binding Feed.Link}" Grid.Column="2" Grid.Row="6"/>
 
-        <TextBlock Text="Image Path" Grid.Column="0" Grid.Row="6"/>
-        <TextBox   Text="{Binding Feed.ImagePath}" Grid.Column="2" Grid.Row="6"/>
-
-        <TextBlock   Text="Description" Grid.Column="0" Grid.Row="8"/>
-        <TextBox     Text="{Binding Feed.Description}" Grid.Column="2" Grid.Row="8"
-                     MaxLines="10" AcceptsReturn="True"/>
+        <TextBlock Text="Description" Grid.Column="0" Grid.Row="8"/>
+        <TextBox   Text="{Binding Feed.Description}" Grid.Column="2" Grid.Row="8"
+                   MaxLines="10" AcceptsReturn="True"/>
 
         <Button Content="Update Feed Metadata" Grid.Column="2" Grid.Row="10" HorizontalAlignment="Right"
                 Click="DoUpdate"/>

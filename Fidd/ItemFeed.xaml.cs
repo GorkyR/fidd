@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -10,7 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Fidd
 {
@@ -19,6 +19,19 @@ namespace Fidd
     /// </summary>
     public partial class ItemFeed : UserControl
     {
+        ImageSource _icon = null;
+        public ImageSource Icon
+        {
+            get => _icon;
+            set
+            {
+                if (value is null)
+                    ImageIcon.Source = new BitmapImage(new Uri(@"/Icons/rss_feed.png", UriKind.Relative));
+                else
+                    ImageIcon.Source = value;
+                _icon = value;
+            }
+        }
         public string Title {
             get => TextFeedName.Text;
             set { TextFeedName.Text = value; }
@@ -74,6 +87,8 @@ namespace Fidd
             Feed = feed;
             Title = feed.Title;
             Unread = feed.Unread.Count;
+            if (!(feed.ImagePath is null))
+                Icon = App.LoadImageFile(Path.Combine(App.FeedManager.FeedDirectory, feed.ImagePath));
             ToolTip = feed.Description;
         }
 
@@ -113,6 +128,10 @@ namespace Fidd
             {
                 new WindowEditFeed(Feed).ShowDialog();
                 Title   = Feed.Title;
+                if (Feed.ImagePath is null)
+                    Icon = App.LoadImageResource("/Icons/rss_feed.png");
+                else
+                    Icon = App.LoadImageFile(Path.Combine(App.FeedManager.FeedDirectory, Feed.ImagePath));
                 ToolTip = Feed.Description;
             }
         }

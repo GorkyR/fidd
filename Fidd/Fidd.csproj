@@ -8,7 +8,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Icons\add.png" />
+    <None Remove="Icons\bookmark.png" />
+    <None Remove="Icons\favorites.png" />
+    <None Remove="Icons\list.png" />
+    <None Remove="Icons\no_image.png" />
+    <None Remove="Icons\rss_feed.png" />
+    <None Remove="Icons\sync.png" />
+    <None Remove="Icons\unread.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FeedManager\FeedManager.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icons\add.png" />
+    <Resource Include="Icons\bookmark.png" />
+    <Resource Include="Icons\favorites.png" />
+    <Resource Include="Icons\list.png" />
+    <Resource Include="Icons\no_image.png" />
+    <Resource Include="Icons\rss_feed.png" />
+    <Resource Include="Icons\sync.png" />
+    <Resource Include="Icons\unread.png" />
   </ItemGroup>
 
 </Project>
