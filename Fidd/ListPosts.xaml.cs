@@ -28,7 +28,19 @@ namespace Fidd
             get => _posts;
             set
             {
-                ListViewPosts.ItemsSource = from post in value select new ItemPost(post, DisplayFeedTitle);
+                StackPosts.Children.Clear();
+                foreach (var post in value)
+                {
+                    var item = new ItemPost(post, DisplayFeedTitle);
+                    item.Click += async (s, e) =>
+                    {
+                        ClearSelectedPosts();
+                        item.Selected = true;
+                        await OpenPost?.Invoke(item.Post);
+                        item.Read = true;
+                    };
+                    StackPosts.Children.Add(item);
+                }
                 _posts = value;
             }
         }
@@ -39,14 +51,10 @@ namespace Fidd
             InitializeComponent();
         }
 
-        private async void SelectedPostChangedAsync(object sender, SelectionChangedEventArgs e)
+        void ClearSelectedPosts()
         {
-            if (ListViewPosts.SelectedIndex != -1)
-            {
-                var selected_post = ListViewPosts.SelectedItem as ItemPost;
-                await OpenPost?.Invoke(selected_post.Post);
-                selected_post.Read = true;
-            }
+            foreach (var item in StackPosts.Children.Cast<ItemPost>())
+                item.Selected = false;
         }
     }
 }

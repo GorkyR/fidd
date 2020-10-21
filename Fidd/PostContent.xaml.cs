@@ -23,21 +23,25 @@ namespace Fidd
     public partial class PostContent : UserControl
     {
         const int max_width = 800;
+        const int font_size = 20;
         static string css_style = @$"
             div.post-title, div.post-body {{ max-width: {max_width}px; margin: 0 auto; }}
-            body {{ font-family: Calibri, sans-serif; font-size: 20px; margin: 30px; }}
-            pre, code {{ font-family: Fira Code, monospace; font-size: 15px; color: #333; background-color: #eee; }}
+            body {{ font-family: ""Segoe UI"", Verdana, Calibri, sans-serif; font-size: {font_size}px; margin: 30px; color: #222 }}
+            pre, code {{ font-family: Fira Code, monospace; font-size: {font_size * 0.75}px; color: #333; background-color: #eee; }}
             a, a:visited {{ color: blue; text-decoration: none; }}
-            div.post-title > a {{ color: black; }}
+            div.post-title > a {{ color: #222; }}
             div.post-title > a:hover {{ color: blue;  }}
-            div.post-title > a > h1 {{ font-size: 38px; font-weight: 800; }}
+            div.post-title > a > h1 {{ font-size: {font_size * 1.8}px; font-weight: 800; }}
 
-            div.post-body h1 {{ font-size: 32px; }}
-            div.post-body h2 {{ font-size: 28px; }}
-            div.post-body h3 {{ font-size: 25px; }}
+            div.post-body h1 {{ font-size: {font_size * 1.6 }px; }}
+            div.post-body h2 {{ font-size: {font_size * 1.4 }px; }}
+            div.post-body h3 {{ font-size: {font_size * 1.25}px; }}
 
             img, figure {{ max-width: 100%; display: block; border-radius: 5px; }}
             p > img {{ display: inline-block; }}
+
+            blockquote {{ border-left: 1px solid #777777; padding-left: 16px; margin: 0; color: #444; }}
+            li {{ margin-bottom: 16px; }}
         ";
 
         Feed.Post _post = null;

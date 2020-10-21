@@ -20,8 +20,6 @@ namespace Fidd
     /// </summary>
     public partial class WindowMain : Window
     {
-        public FeedManager FeedManager = new FeedManager("Feeds");
-
         public WindowMain()
         {
             InitializeComponent();

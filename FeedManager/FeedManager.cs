@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using CodeHollow.FeedReader;
 using HtmlAgilityPack;
@@ -12,8 +13,8 @@ public class FeedManager
 {
     public string FeedDirectory { get; set; }
     public List<Feed> Feeds { get; } = new List<Feed>();
-
     public List<Feed.Post> Posts => (from feed in Feeds from post in feed.Posts orderby post.Published descending select post).ToList();
+    public List<Bookmark> Bookmarks { get; } = new List<Bookmark>();
 
     public FeedManager(string directory)
     {
@@ -38,9 +39,16 @@ public class FeedManager
 
                 Feeds.Add(feed);
             }
+            foreach (var bookmark_file in Directory.GetFiles(Path.Combine(directory, "bookmarks"), "*.bookmark"))
+            {
+                Bookmark bookmark;
+                using (var file = new StreamReader(bookmark_file))
+                    bookmark = Bookmark.Deserialize(Path.GetFileNameWithoutExtension(bookmark_file), file.ReadToEnd());
+                Bookmarks.Add(bookmark);
+            }
         }
         else
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(Path.Combine(directory, "bookmarks"));
     }
 
     public async Task AddFeedAsync(string feed_url)
@@ -111,24 +119,49 @@ public class FeedManager
             return feed_image_path;
         }
     }
+    public void DeleteFeed(Feed feed)
+    {
+        if (Feeds.Contains(feed))
+        {
+            var feed_path = Path.Combine(FeedDirectory, feed.ID);
+            File.Delete($"{feed_path}.feed");
+            Directory.Delete(feed_path, true);
+            Feeds.Remove(feed);
+        }
+    }
     public async Task FetchAndUpdateFeedAsync(Feed feed)
     {
+        await FetchAndUpdateFeedAsync(feed, (x) => { }); 
+    }
+    public async Task FetchAndUpdateFeedAsync(Feed feed, Action<int> progress_callback)
+    {
         var parsed_feed = await FeedReader.ReadAsync(feed.FeedLink);
-        var last_update = (DateTime)parsed_feed.LastUpdatedDate;
+        var last_update = parsed_feed.LastUpdatedDate is null ? DateTime.Now : (DateTime)parsed_feed.LastUpdatedDate;
         if (last_update > feed.LastUpdated)
         {
-            feed.LastUpdated = last_update;
-            feed.Link = parsed_feed.Link;
-            feed.Description = ExtractTextFromHtml(parsed_feed.Description);
+            var posts_to_add = parsed_feed.Items.Where(i => !feed.Posts.Any(p => p.GUID == i.Id));
+            var n_posts_to_add = posts_to_add.Count();
+            if (n_posts_to_add > 0)
+            {
+                progress_callback(n_posts_to_add);
+                await AddPostsToFeedAsync(feed, posts_to_add);
+                feed.Posts.Sort((a, b) => b.Published.CompareTo(a.Published));
+            }
 
-            await AddPostsToFeedAsync(feed, parsed_feed.Items.Where(i => !feed.Posts.Any(p => p.GUID == i.Id)));
+            feed.LastUpdated = last_update;
+            feed.Link        = parsed_feed.Link;
+            feed.Description = ExtractTextFromHtml(parsed_feed.Description);
+            await UpdateFeedMetadataAsync(feed);
         }
     }
     public async Task MarkPostReadAsync(Feed.Post post)
     {
-        post.Read = true;
-        using (var post_file = new StreamWriter(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post")))
-            await post_file.WriteAsync(post.Serialize());
+        if (!post.Read)
+        {
+            post.Read = true;
+            using (var post_file = new StreamWriter(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post")))
+                await post_file.WriteAsync(post.Serialize());
+        }
     }
     public async Task UpdateFeedMetadataAsync(Feed feed)
     {
@@ -139,6 +172,32 @@ public class FeedManager
     {
         using (var content_file = new StreamReader(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.content")))
             return content_file.ReadToEnd();
+    }
+    public string LoadBookmarkContent(Bookmark bookmark)
+    {
+        using (var content_file = new StreamReader(Path.Combine(FeedDirectory, "bookmarks", $"{bookmark.ID}.content")))
+            return content_file.ReadToEnd();
+    }
+    public async Task BookmarkPostAsync(Feed.Post post)
+    {
+        var bookmark = new Bookmark(post.ID)
+        {
+            Title = post.Title,
+            Link  = post.Link,
+            FeedTitle = post.ParentFeed.Title,
+            FeedLink  = post.ParentFeed.Link,
+            Published = post.Published
+        };
+
+        var bookmark_path_pre = Path.Combine(FeedDirectory, "bookmarks", bookmark.ID);
+
+        File.Copy(
+            Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.content"),
+            $"{bookmark_path_pre}.content"
+        );
+
+        using (var file = new StreamWriter($"{bookmark_path_pre}.bookmark"))
+            await file.WriteAsync(bookmark.Serialize());
     }
     async Task AddPostsToFeedAsync(Feed feed, IEnumerable<FeedItem> feed_items)
     {
@@ -158,7 +217,7 @@ public class FeedManager
 
             var post_content_filename = Path.Combine(FeedDirectory, feed.ID, post_id);
 
-            var post_content = (await EmbedImagesInHtmlAsync(item.Content is null ? item.Description : item.Content, post)).Trim();
+            var post_content = (await ProcessHtmlAsync(item.Content is null ? item.Description : item.Content, post)).Trim();
 
             await WriteToFileAsync($"{post_content_filename}.post", post.Serialize());
             await WriteToFileAsync($"{post_content_filename}.content", post_content.Trim());
@@ -196,14 +255,25 @@ public class FeedManager
     {
         return string.Join("", Path.GetExtension(url).TakeWhile(c => c != '?'));
     }
-    static async Task<string> EmbedImagesInHtmlAsync(string content, Feed.Post post)
+    static async Task<string> ProcessHtmlAsync(string content, Feed.Post post)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(content);
 
-        var images = (from node in doc.DocumentNode.Descendants()
-                     where string.Equals(node.Name, "img", StringComparison.OrdinalIgnoreCase)
-                     select node).ToList();
+        void RemoveElementsNamed(string name)
+        {
+            foreach (var node in doc.DocumentNode.Descendants(name))
+                node.Remove();
+        }
+
+        RemoveElementsNamed("script");
+        RemoveElementsNamed("iframe");
+        RemoveElementsNamed("style");
+
+        foreach (var node in doc.DocumentNode.Descendants())
+            node.Attributes.Remove("style");
+
+        var images = doc.DocumentNode.Descendants("img").ToList();
 
         var downloader = new WebClient();
 

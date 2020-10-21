@@ -30,7 +30,8 @@ namespace Fidd
             try
             {
                 await App.FeedManager.AddFeedAsync(EditFeedUrl.Text);
-                MessageBox.Show("Feed added succesfully.", "Sucess", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Commented out cuz you shouldn't be bothered on success
+                //MessageBox.Show("Feed added succesfully.", "Sucess", MessageBoxButton.OK, MessageBoxImage.Information);
                 Close();
             }
             catch (Exception ex) { MessageBox.Show($"Error:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Information); }

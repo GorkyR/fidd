@@ -25,7 +25,7 @@ namespace Fidd
             set {
                 _update_posts = value;
                 UpdateFeedList();
-                FilterClicked(FeedFilterAll, null);
+                FilterClicked(FeedFilterUnread, null);
             }
         }
         public ListFeedsSidebar()
@@ -45,11 +45,7 @@ namespace Fidd
             PanelSubscriptions.Children.Clear();
             foreach (var feed in App.FeedManager.Feeds)
             {
-                var feed_item = new ItemFeed()
-                {
-                    Title = feed.Title,
-                    Unread = feed.Unread.Count
-                };
+                var feed_item = new ItemFeed(feed);
                 feed_item.Click += (s, e) =>
                 {
                     ClearSelectedFeeds();
@@ -69,7 +65,7 @@ namespace Fidd
                 FeedFilterAll.Selected = true;
                 LoadPosts?.Invoke(App.FeedManager.Posts, true);
             }
-            else
+            else if (sender == FeedFilterUnread)
             {
                 FeedFilterUnread.Selected = true;
                 LoadPosts?.Invoke(App.FeedManager.Posts.Where(p => !p.Read).ToList(), true);
@@ -78,25 +74,23 @@ namespace Fidd
 
         public void UpdateListWhilePreservingSelection()
         {
-            var prev_filter = FeedFilterAll.Selected
-                ? FeedFilterAll
-                : (FeedFilterUnread.Selected ? FeedFilterUnread
-                : null);
-            var prev_feed = prev_filter is null
-                ? (from item in PanelSubscriptions.Children.Cast<ItemFeed>() where item.Selected select item.Title).First()
-                : null;
+            var prev_selected_feeds = (from item in PanelSubscriptions.Children.Cast<ItemFeed>() where item.Selected select item.Feed.ID);
+            string prev_selected_feed = null;
+            if (prev_selected_feeds.Count() > 0)
+                prev_selected_feed = prev_selected_feeds.First();
 
             UpdateFeedList();
 
-            if (prev_filter != null)
-                prev_filter.Selected = true;
-            else
+            if (prev_selected_feed != null)
             {
-                var prev_selected =
-                    (from item in PanelSubscriptions.Children.Cast<ItemFeed>()
-                     where item.Title == prev_feed
-                     select item).First();
-                prev_selected.Selected = true;
+                var should_be_selected =
+                    from item in PanelSubscriptions.Children.Cast<ItemFeed>()
+                    where item.Feed.ID == prev_selected_feed
+                    select item;
+                if (should_be_selected.Count() == 0)
+                    FilterClicked(FeedFilterUnread, null);
+                else
+                    should_be_selected.First().Selected = true;
             }
         }
         
@@ -105,6 +99,12 @@ namespace Fidd
             var add_feed_window = new WindowAddFeed();
             add_feed_window.ShowDialog();
 
+            UpdateListWhilePreservingSelection();
+        }
+
+        private void UpdateFeedsContent(object sender, RoutedEventArgs e)
+        {
+            (new WindowUpdateFeeds()).ShowDialog();
             UpdateListWhilePreservingSelection();
         }
     }

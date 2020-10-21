@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Fidd"
         mc:Ignorable="d"
-        Title="Add Feed" SizeToContent="Height" Width="400">
+        Title="Add Feed" SizeToContent="Height" Width="400"
+        WindowStartupLocation="CenterOwner">
     <StackPanel Orientation="Vertical" Margin="8">
         <TextBlock Text="Feed URL: "/>
         <TextBox x:Name="EditFeedUrl" Margin="0, 4"/>

@@ -49,6 +49,17 @@ namespace Fidd
             }
         }
 
+        bool _selected = false;
+        public bool Selected
+        {
+            get => _selected;
+            set
+            {
+                Overlay.Opacity = value ? 1 : 0;
+                _selected = value;
+            }
+        }
+
         CultureInfo us_format = new CultureInfo("en-US");
 
         DateTime date;
@@ -108,6 +119,46 @@ namespace Fidd
             Published   = post.Published;
             Read        = post.Read;
             Feed        = display_feed_title? post.ParentFeed?.Title : null;
+        }
+
+        public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent(
+            "Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ItemPost));
+
+        public event RoutedEventHandler Click { add => AddHandler(ClickEvent, value); remove => RemoveHandler(ClickEvent, value); }
+
+        bool mouse_down_inside = false;
+        private void RememberMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                mouse_down_inside = true;
+        }
+
+        private void CheckMouseState(object sender, MouseEventArgs e)
+        {
+            if (!Selected)
+                Overlay.Opacity = 0.5;
+            if (e.LeftButton == MouseButtonState.Released)
+                mouse_down_inside = false;
+        }
+
+        private void CheckClick(object sender, MouseButtonEventArgs e)
+        {
+            if (mouse_down_inside)
+            {
+                DoClick();
+                mouse_down_inside = false;
+            }
+        }
+
+        public void DoClick()
+        {
+            RaiseEvent(new RoutedEventArgs(ClickEvent));
+        }
+
+        private void EndHover(object sender, MouseEventArgs e)
+        {
+            if (!Selected)
+                Overlay.Opacity = 0;
         }
     }
 }

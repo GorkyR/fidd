@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +44,7 @@ namespace Fidd
                 }
             }
         }
+
         bool _selected = false;
         public bool Selected
         {
@@ -54,22 +56,41 @@ namespace Fidd
             }
         }
 
+        public Feed Feed { get; set; }
+
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent(
         "Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ItemFeed));
 
         public event RoutedEventHandler Click { add => AddHandler(ClickEvent, value); remove => RemoveHandler(ClickEvent, value); }
 
-        bool mouse_down_inside = false;
         public ItemFeed()
         {
             InitializeComponent();
             Unread = 0;
         }
 
+        public ItemFeed(Feed feed) : this()
+        {
+            Feed = feed;
+            Title = feed.Title;
+            Unread = feed.Unread.Count;
+            ToolTip = feed.Description;
+        }
+
+        bool mouse_down_inside = false;
+
         private void RememberMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
                 mouse_down_inside = true;
+        }
+
+        private void CheckMouseState(object sender, MouseEventArgs e)
+        {
+            if (!Selected)
+                Overlay.Opacity = 0.5;
+            if (e.LeftButton == MouseButtonState.Released)
+                mouse_down_inside = false;
         }
 
         private void CheckClick(object sender, MouseButtonEventArgs e)
@@ -86,10 +107,44 @@ namespace Fidd
             RaiseEvent(new RoutedEventArgs(ClickEvent));
         }
 
-        private void CheckMouseState(object sender, MouseEventArgs e)
+        private void PopUpEditFeedWindow(object sender, RoutedEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Released)
-                mouse_down_inside = false;
+            if (Feed != null)
+            {
+                new WindowEditFeed(Feed).ShowDialog();
+                Title   = Feed.Title;
+                ToolTip = Feed.Description;
+            }
+        }
+
+        private async void MarkFeedReadAsync(object sender, RoutedEventArgs e)
+        {
+            if (Feed != null)
+                foreach (var post in Feed.Unread)
+                    await App.FeedManager.MarkPostReadAsync(post);
+        }
+
+        private void UnsbscribeFromFeed(object sender, RoutedEventArgs e)
+        {
+            if (Feed != null)
+            {
+                var confirmation = MessageBox.Show(
+                    $"Are you sure you want to unsubscribe from\n{Feed.Title} ({Feed.Link})?\n\nAll posts will be deleted and not all of them may be available in the future.",
+                    $"Unsubscribe from \"{Feed.Title}\"",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (confirmation == MessageBoxResult.Yes)
+                {
+                    App.FeedManager.DeleteFeed(Feed);
+                    // ↓↓↓ BAARFFFFF
+                    (Application.Current.MainWindow as WindowMain).ListFeeds.UpdateListWhilePreservingSelection();
+                }
+            }
+        }
+
+        private void EndHover(object sender, MouseEventArgs e)
+        {
+            if (!Selected)
+                Overlay.Opacity = 0;
         }
     }
 }

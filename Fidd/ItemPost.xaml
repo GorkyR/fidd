@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Fidd"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignWidth="250">
+    
     <UserControl.Resources>
         <Style x:Key="Caption" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
@@ -14,7 +15,13 @@
 
     <Border BorderThickness="0, 0, 0, 1" BorderBrush="DarkGray">
         <Grid>
-            <Grid Margin="0, 0, 0, 8">
+            <Grid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Mark as Unread"/>
+                    <MenuItem Header="Bookmark"/>
+                </ContextMenu>
+            </Grid.ContextMenu>
+            <Grid Margin="8, 4, 8, 12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -27,25 +34,29 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock x:Name="TextTitle"
-                            Text="Title of the post"
-                            FontWeight="Bold" FontSize="16" TextWrapping="WrapWithOverflow"
-                            Grid.ColumnSpan="100"/>
+                           Text="Title of the post"
+                           FontWeight="Bold" FontSize="16"
+                           TextWrapping="WrapWithOverflow" TextTrimming="WordEllipsis"
+                           MaxHeight="50"
+                           Grid.ColumnSpan="100"/>
                 <StackPanel Orientation="Horizontal"
                             Grid.Row="1"
                             Grid.ColumnSpan="100">
-                    <TextBlock x:Name="TextFrom" Text="from " Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextFeed" Text="feed" FontWeight="Bold" Style="{StaticResource Caption}" Margin="0, 0, 2, 0"/>
-                    <TextBlock x:Name="TextBy" Text="by " Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextAuthor" Text="postauthor" FontWeight="Bold" Style="{StaticResource Caption}" Margin="0, 0, 2, 0"/>
-                    <TextBlock Text="on " Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextDate" Text="published_date" FontWeight="Bold" Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextFrom"   Text="from "          Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextFeed"   Text="feed"           Style="{StaticResource Caption}" FontWeight="Bold" Margin="0, 0, 3, 0"/>
+                    <TextBlock x:Name="TextBy"     Text="by "            Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextAuthor" Text="postauthor"     Style="{StaticResource Caption}" FontWeight="Bold" Margin="0, 0, 3, 0"/>
+                    <TextBlock                     Text="on "            Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextDate"   Text="published_date" Style="{StaticResource Caption}" FontWeight="Bold"/>
                 </StackPanel>
                 <TextBlock x:Name="TextDescription"
-                            Grid.Row="3" Grid.Column="1"
-                            Text="Description of the post goes here, you know how it is?  Yeah, here goes the motherfucking description. YeeeeaH!"
-                            TextWrapping="Wrap"/>
+                           Grid.Row="3" Grid.Column="1"
+                           Text="Description of the post goes here, you know how it is?  Yeah, here goes the motherfucking description. YeeeeaH!"
+                           TextWrapping="Wrap" TextTrimming="WordEllipsis"
+                           MaxHeight="100"/>
             </Grid>
             <Rectangle x:Name="Fade" Fill="#66FFFFFF" Visibility="Hidden"/>
+            <Rectangle x:Name="Overlay" Fill="#3F0064FF" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" MouseLeave="EndHover" Opacity="0"/>
         </Grid>
     </Border>
 </UserControl>
