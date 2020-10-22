@@ -16,7 +16,7 @@ namespace Fidd
     public partial class App : Application
     {
         public static FeedManager FeedManager = new FeedManager(
-            Environment.ExpandEnvironmentVariables(@"%userprofile%\Documents\Feeds")
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fidd")
         );
         public App() { }
 
