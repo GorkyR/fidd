@@ -17,8 +17,8 @@
         <Grid>
             <Grid.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Mark as Unread"/>
-                    <MenuItem Header="Bookmark"/>
+                    <MenuItem x:Name="MenuItemUnread"   Header="Mark as unread" Click="MarkPostAsUnread"/>
+                    <MenuItem x:Name="MenuItemBookmark" Header="Bookmark"       Click="BookmarkPost"/>
                 </ContextMenu>
             </Grid.ContextMenu>
             <Grid Margin="8, 4, 8, 12">
@@ -33,12 +33,19 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock x:Name="TextTitle"
-                           Text="Title of the post"
-                           FontWeight="Bold" FontSize="16"
-                           TextWrapping="WrapWithOverflow" TextTrimming="WordEllipsis"
-                           MaxHeight="50"
-                           Grid.ColumnSpan="100"/>
+                <Grid Grid.ColumnSpan="100" HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TextTitle" Grid.Column="0"
+                               Text="Title of the post"
+                               FontWeight="Bold" FontSize="16"
+                               TextWrapping="WrapWithOverflow" TextTrimming="WordEllipsis"
+                               MaxHeight="50"/>
+                    <Image x:Name="IconBookmarked" Grid.Column="1"
+                           Source="/Icons/bookmark.png" Height="20" VerticalAlignment="Top" Margin="2, -4, 0, 0"/>
+                </Grid>
                 <StackPanel Orientation="Horizontal"
                             Grid.Row="1"
                             Grid.ColumnSpan="100">

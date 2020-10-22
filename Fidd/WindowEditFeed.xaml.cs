@@ -75,7 +75,7 @@ namespace Fidd
                 CheckPathExists = true,
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
                 Multiselect = false,
-                Filter = "Image files|*.png;*.jpg;*.jpeg|All files|*.*"
+                Filter = "Image files|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif|All files|*.*"
             };
             if (select_image_dialog.ShowDialog() == true)
             {

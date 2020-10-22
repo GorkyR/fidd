@@ -8,13 +8,16 @@
         Title="Fidd" Height="700" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width   ="180"/>
             <ColumnDefinition MinWidth="300"/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width   ="2*"/>
         </Grid.ColumnDefinitions>
         
         <local:ListFeedsSidebar x:Name="ListFeeds"   Grid.Column="0"/>
-        <local:ListPosts        x:Name="ListPosts"   Grid.Column="1"/>
+        <Border Grid.Column="1"
+                BorderBrush="DarkGray" BorderThickness="0.5, 0, 0.5, 0">
+            <local:ListPosts    x:Name="ListPosts"/>
+        </Border>
         <local:PostContent      x:Name="PostContent" Grid.Column="2"/>
     </Grid>
 </Window>

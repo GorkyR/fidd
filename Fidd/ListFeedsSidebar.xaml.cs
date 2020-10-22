@@ -37,6 +37,7 @@ namespace Fidd
         {
             FeedFilterAll.Selected = false;
             FeedFilterUnread.Selected = false;
+            FeedFilterBookmarks.Selected = false;
             foreach (ItemFeed feed_item in PanelSubscriptions.Children)
                 feed_item.Selected = false;
         }
@@ -69,6 +70,14 @@ namespace Fidd
             {
                 FeedFilterUnread.Selected = true;
                 LoadPosts?.Invoke(App.FeedManager.Posts.Where(p => !p.Read).ToList(), true);
+            }
+            else if (sender == FeedFilterBookmarks)
+            {
+                FeedFilterBookmarks.Selected = true;
+                LoadPosts?.Invoke(
+                    (from bookmark in App.FeedManager.Bookmarks
+                    orderby bookmark.DateBookmarked descending
+                    select App.FeedManager.MockPostFromBookmark(bookmark)).ToList(), true);
             }
         }
 

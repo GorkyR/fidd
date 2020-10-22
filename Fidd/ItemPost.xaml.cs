@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -79,7 +80,20 @@ namespace Fidd
             set
             {
                 Fade.Visibility = value? Visibility.Visible : Visibility.Hidden;
+                MenuItemUnread.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
                 _read = value;
+            }
+        }
+
+        bool _bookmarked;
+        public bool Bookmarked
+        {
+            get => _bookmarked;
+            set
+            {
+                IconBookmarked.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                MenuItemBookmark.Header = value ? "Unbookmark" : "Bookmark";
+                _bookmarked = value;
             }
         }
 
@@ -116,8 +130,9 @@ namespace Fidd
             Post        = post;
             Title       = post.Title;
             Description = post.Description;
-            Published   = post.Published;
+            Published   = post.DatePublished;
             Read        = post.Read;
+            Bookmarked  = App.FeedManager.Bookmarks.Any(b => b.GUID == post.GUID);
             Feed        = display_feed_title? post.ParentFeed?.Title : null;
         }
 
@@ -159,6 +174,45 @@ namespace Fidd
         {
             if (!Selected)
                 Overlay.Opacity = 0;
+        }
+
+        private async void MarkPostAsUnread(object sender, RoutedEventArgs e)
+        {
+            await App.FeedManager.MarkPostUnreadAsync(Post);
+            Read = false;
+            (Application.Current.MainWindow as WindowMain).ListFeeds.UpdateListWhilePreservingSelection();
+        }
+
+        private async void BookmarkPost(object sender, RoutedEventArgs e)
+        {
+            if (Bookmarked)
+            {
+                if (!App.FeedManager.Posts.Any(p => p.GUID == Post.GUID))
+                {
+                    var response = MessageBox.Show(
+                        "This post is no longer in your feeds.\n"
+                        + "(You may have unsubscribed from its parent feed at some point.)\n"
+                        + "\n"
+                        + "Removing this bookmark will delete its contents, and it may no longer be available through the original feed in the future.\n"
+                        + "\n"
+                        + "Do you want to remove this bookmark and potentially lose this data?",
+                        "Remove bookmark? Potential loss of data", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (response != MessageBoxResult.Yes)
+                        return;
+                }
+                if (Post.ParentFeed.ID == "bookmarks")
+                {
+                    try { (Parent as StackPanel).Children.Remove(this); } catch (Exception ex) { ; }
+                }
+                var bookmark = App.FeedManager.Bookmarks.First(b => b.GUID == Post.GUID);
+                App.FeedManager.RemoveBookmark(bookmark);
+                Bookmarked = false;
+            }
+            else
+            {
+                await App.FeedManager.BookmarkPostAsync(Post);
+                Bookmarked = true;
+            }
         }
     }
 }
