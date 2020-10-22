@@ -11,7 +11,7 @@ public class Feed
     public string Title { get; set; }
     public string Link { get; set; }
     public string ImagePath { get; set; }
-    public DateTime LastUpdated { get; set; }
+    public DateTime DateLastUpdated { get; set; }
     public string Description { get; set; }
     [JsonIgnore] public List<Post> Posts { get; } = new List<Post>();
     [JsonIgnore] public IReadOnlyList<Post> Unread => (from post in Posts where !post.Read select post).ToList().AsReadOnly();
@@ -23,7 +23,7 @@ public class Feed
         public string GUID { get; set; }
         public string Title { get; set; }
         public string Link { get; set; }
-        public DateTime Published { get; set; }
+        public DateTime DatePublished { get; set; }
         public string Description { get; set; }
         public bool Read { get; set; }
 

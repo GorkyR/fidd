@@ -15,7 +15,7 @@ public class FeedManager
 {
     public string FeedDirectory { get; set; }
     public List<Feed> Feeds { get; } = new List<Feed>();
-    public List<Feed.Post> Posts => (from feed in Feeds from post in feed.Posts orderby post.Published descending select post).ToList();
+    public List<Feed.Post> Posts => (from feed in Feeds from post in feed.Posts orderby post.DatePublished descending select post).ToList();
     public List<Bookmark> Bookmarks { get; } = new List<Bookmark>();
 
     public FeedManager(string directory)
@@ -37,7 +37,7 @@ public class FeedManager
                     feed.Posts.Add(post);
                 }
 
-                feed.Posts.Sort((x, y) => y.Published.CompareTo(x.Published));
+                feed.Posts.Sort((x, y) => y.DatePublished.CompareTo(x.DatePublished));
 
                 Feeds.Add(feed);
             }
@@ -81,7 +81,7 @@ public class FeedManager
                 Title = feed_title,
                 Link = $"{feed_uri.Scheme}://{feed_uri.Host}",
                 ImagePath = feed_image_path,
-                LastUpdated = parsed_feed.LastUpdatedDate is null ? DateTime.Now : (DateTime)parsed_feed.LastUpdatedDate,
+                DateLastUpdated = parsed_feed.LastUpdatedDate is null ? DateTime.Now : (DateTime)parsed_feed.LastUpdatedDate,
                 Description = ExtractTextFromHtml(parsed_feed.Description)
             };
 
@@ -162,7 +162,7 @@ public class FeedManager
     {
         var parsed_feed = await FeedReader.ReadAsync(feed.FeedLink);
         var last_update = parsed_feed.LastUpdatedDate is null ? DateTime.Now : (DateTime)parsed_feed.LastUpdatedDate;
-        if (last_update > feed.LastUpdated)
+        if (last_update > feed.DateLastUpdated)
         {
             var posts_to_add = parsed_feed.Items.Where(i => !feed.Posts.Any(p => p.GUID == i.Id));
             var n_posts_to_add = posts_to_add.Count();
@@ -170,24 +170,39 @@ public class FeedManager
             {
                 progress_callback(n_posts_to_add);
                 await AddPostsToFeedAsync(feed, posts_to_add);
-                feed.Posts.Sort((a, b) => b.Published.CompareTo(a.Published));
+                feed.Posts.Sort((a, b) => b.DatePublished.CompareTo(a.DatePublished));
             }
 
-            feed.LastUpdated = last_update;
+            feed.DateLastUpdated = last_update;
             feed.Link        = parsed_feed.Link;
             feed.Description = ExtractTextFromHtml(parsed_feed.Description);
             await UpdateFeedMetadataAsync(feed);
         }
     }
+
     public async Task MarkPostReadAsync(Feed.Post post)
     {
         if (!post.Read)
         {
             post.Read = true;
-            using (var post_file = new StreamWriter(Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post")))
+            var post_filepath = Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post");
+            if (File.Exists(post_filepath))
+            using (var post_file = new StreamWriter(post_filepath))
                 await post_file.WriteAsync(post.Serialize());
         }
     }
+    public async Task MarkPostUnreadAsync(Feed.Post post)
+    {
+        if (post.Read)
+        {
+            post.Read = false;
+            var post_filepath = Path.Combine(FeedDirectory, post.ParentFeed.ID, $"{post.ID}.post");
+            if (File.Exists(post_filepath))
+                using (var post_file = new StreamWriter(post_filepath))
+                    await post_file.WriteAsync(post.Serialize());
+        }
+    }
+
     public async Task UpdateFeedMetadataAsync(Feed feed)
     {
         using (var feed_file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed.ID}.feed")))
@@ -207,11 +222,13 @@ public class FeedManager
     {
         var bookmark = new Bookmark(post.ID)
         {
+            GUID = post.GUID,
             Title = post.Title,
             Link  = post.Link,
             FeedTitle = post.ParentFeed.Title,
             FeedLink  = post.ParentFeed.Link,
-            Published = post.Published
+            DatePublished = post.DatePublished,
+            Description = post.Description,
         };
 
         var bookmark_path_pre = Path.Combine(FeedDirectory, "bookmarks", bookmark.ID);
@@ -223,6 +240,36 @@ public class FeedManager
 
         using (var file = new StreamWriter($"{bookmark_path_pre}.bookmark"))
             await file.WriteAsync(bookmark.Serialize());
+
+        Bookmarks.Add(bookmark);
+    }
+    public Feed.Post MockPostFromBookmark(Bookmark bookmark)
+    {
+        var subscribed_feed = Feeds.FirstOrDefault(f => f.Link == bookmark.FeedLink);
+        var feed = new Feed("bookmarks", bookmark.FeedLink)
+        {
+            Title = subscribed_feed is null? bookmark.FeedLink : subscribed_feed.Title
+        };
+        var post = new Feed.Post(feed, bookmark.ID)
+        {
+            GUID = bookmark.GUID,
+            Title = bookmark.Title,
+            Link = bookmark.Link,
+            DatePublished = bookmark.DatePublished,
+            Description = bookmark.Description,
+            Read = true
+        };
+        return post;
+    }
+    public void RemoveBookmark(Bookmark bookmark)
+    {
+        if (Bookmarks.Contains(bookmark))
+        {
+            var bookmark_path_pre = Path.Combine(FeedDirectory, "bookmarks", bookmark.ID);
+            File.Delete($"{bookmark_path_pre}.bookmark");
+            File.Delete($"{bookmark_path_pre}.content");
+            Bookmarks.Remove(bookmark);
+        }
     }
     async Task AddPostsToFeedAsync(Feed feed, IEnumerable<FeedItem> feed_items)
     {
@@ -236,7 +283,7 @@ public class FeedManager
                 GUID = item.Id,
                 Link = item.Link,
                 Title = post_title,
-                Published = (DateTime)item.PublishingDate,
+                DatePublished = (DateTime)item.PublishingDate,
                 Description = ExtractTextFromHtml(item.Description),
             };
 
@@ -260,7 +307,7 @@ public class FeedManager
         char[] invalid_chars = Path.GetInvalidFileNameChars();
         foreach (char ch in invalid_chars)
             path = path.Replace(ch, '_');
-        return path.Replace(' ', '_').Replace('.', '_').ToLower().Substring(0, path.Length > 60? 60 : path.Length);
+        return path.Replace(' ', '_').Replace('.', '_').ToLower().Substring(0, path.Length > 200? 200 : path.Length);
     }
     static string ExtractTextFromHtml(string text)
     {
