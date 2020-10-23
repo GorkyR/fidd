@@ -21,6 +21,7 @@ namespace Fidd
     public partial class ListPosts : UserControl
     {
         public bool DisplayFeedTitle { get; set; }
+        public bool DisableFadeOnRead { get; set; }
 
         List<Feed.Post> _posts = null;
         public List<Feed.Post> Posts
@@ -31,7 +32,7 @@ namespace Fidd
                 StackPosts.Children.Clear();
                 foreach (var post in value)
                 {
-                    var item = new ItemPost(post, DisplayFeedTitle);
+                    var item = new ItemPost(post, DisplayFeedTitle, DisableFadeOnRead);
                     item.Click += async (s, e) =>
                     {
                         ClearSelectedPosts();

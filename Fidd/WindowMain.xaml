@@ -5,19 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Fidd"
         mc:Ignorable="d"
-        Title="Fidd" Height="700" Width="1200">
+        Title="Fidd" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width   ="180"/>
-            <ColumnDefinition MinWidth="300"/>
-            <ColumnDefinition Width   ="2*"/>
+            <ColumnDefinition MinWidth="180" Width="Auto"/>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
-        
-        <local:ListFeedsSidebar x:Name="ListFeeds"   Grid.Column="0"/>
-        <Border Grid.Column="1"
-                BorderBrush="DarkGray" BorderThickness="0.5, 0, 0.5, 0">
-            <local:ListPosts    x:Name="ListPosts"/>
+
+        <local:ListFeedsSidebar x:Name="ListFeeds" Grid.Column="0" HorizontalContentAlignment="Stretch" Background="#FFEEEEEE"/>
+        <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0.5, 0, 0.5, 0">
+            <local:ListPosts x:Name="ListPosts"/>
         </Border>
-        <local:PostContent      x:Name="PostContent" Grid.Column="2"/>
+        <local:PostContent x:Name="PostContent" Grid.Column="2"/>
     </Grid>
 </Window>

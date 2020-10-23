@@ -103,7 +103,7 @@ namespace Fidd
         private void CheckMouseState(object sender, MouseEventArgs e)
         {
             if (!Selected)
-                Overlay.Opacity = 0.5;
+                Overlay.Opacity = 1d/3d;
             if (e.LeftButton == MouseButtonState.Released)
                 mouse_down_inside = false;
         }

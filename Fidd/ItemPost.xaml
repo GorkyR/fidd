@@ -21,7 +21,7 @@
                     <MenuItem x:Name="MenuItemBookmark" Header="Bookmark"       Click="BookmarkPost"/>
                 </ContextMenu>
             </Grid.ContextMenu>
-            <Grid Margin="8, 4, 8, 12">
+            <Grid x:Name="GridContent" Margin="8, 4, 8, 12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -29,7 +29,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="8"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
@@ -62,8 +62,7 @@
                            TextWrapping="Wrap" TextTrimming="WordEllipsis"
                            MaxHeight="100"/>
             </Grid>
-            <Rectangle x:Name="Fade" Fill="#66FFFFFF" Visibility="Hidden"/>
-            <Rectangle x:Name="Overlay" Fill="#3F0064FF" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" MouseLeave="EndHover" Opacity="0"/>
+            <Rectangle x:Name="Overlay" Fill="#3F555555" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" MouseLeave="EndHover" Opacity="0"/>
         </Grid>
     </Border>
 </UserControl>

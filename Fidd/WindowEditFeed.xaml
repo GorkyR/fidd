@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Fidd"
         mc:Ignorable="d"
-        Title="Edit Feed..." SizeToContent="Height" Width="500">
+        Title="Edit Feed..." SizeToContent="Height" Width="500"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize">
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition/>

@@ -61,7 +61,7 @@ namespace Fidd
             }
         }
 
-        CultureInfo us_format = new CultureInfo("en-US");
+        static CultureInfo us_format = new CultureInfo("en-US");
 
         DateTime date;
         public DateTime Published
@@ -69,7 +69,7 @@ namespace Fidd
             get => date;
             set
             {
-                TextDate.Text = value.ToString("d MMM yyyy, h:mmtt", us_format);
+                TextDate.Text = value.ToString("dddd, d MMM yyyy", us_format);
                 date = value;
             }
         }
@@ -79,7 +79,8 @@ namespace Fidd
             get => _read;
             set
             {
-                Fade.Visibility = value? Visibility.Visible : Visibility.Hidden;
+                if (!DisableFadeOnRead)
+                    GridContent.Opacity = value ? .5 : 1;
                 MenuItemUnread.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
                 _read = value;
             }
@@ -96,6 +97,8 @@ namespace Fidd
                 _bookmarked = value;
             }
         }
+
+        public bool DisableFadeOnRead { get; set; }
 
         public Feed.Post Post { get; set; }
         public string Feed
@@ -125,8 +128,9 @@ namespace Fidd
             Feed = null;
             Author = null;
         }
-        public ItemPost(Feed.Post post, bool display_feed_title) : this()
+        public ItemPost(Feed.Post post, bool display_feed_title, bool disable_fade_on_read = false) : this()
         {
+            DisableFadeOnRead = disable_fade_on_read;
             Post        = post;
             Title       = post.Title;
             Description = post.Description;
@@ -151,7 +155,7 @@ namespace Fidd
         private void CheckMouseState(object sender, MouseEventArgs e)
         {
             if (!Selected)
-                Overlay.Opacity = 0.5;
+                Overlay.Opacity = 1d/3d;
             if (e.LeftButton == MouseButtonState.Released)
                 mouse_down_inside = false;
         }

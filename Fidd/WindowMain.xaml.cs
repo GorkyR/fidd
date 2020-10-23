@@ -27,9 +27,10 @@ namespace Fidd
             ListPosts.OpenPost = OpenPostAsync;
         }
 
-        public void LoadPosts(List<Feed.Post> posts, bool include_feed = false)
+        public void LoadPosts(List<Feed.Post> posts, bool include_feed = false, bool disable_fade_on_read = false)
         {
             ClosePost();
+            ListPosts.DisableFadeOnRead = disable_fade_on_read;
             ListPosts.DisplayFeedTitle = include_feed;
             ListPosts.Posts = posts;
         }

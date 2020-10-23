@@ -19,8 +19,8 @@ namespace Fidd
     /// </summary>
     public partial class ListFeedsSidebar : UserControl
     {
-        Action<List<Feed.Post>, bool> _update_posts = null;
-        public Action<List<Feed.Post>, bool> LoadPosts {
+        Action<List<Feed.Post>, bool, bool> _update_posts = null;
+        public Action<List<Feed.Post>, bool, bool> LoadPosts {
             get => _update_posts;
             set {
                 _update_posts = value;
@@ -51,7 +51,7 @@ namespace Fidd
                 {
                     ClearSelectedFeeds();
                     feed_item.Selected = true;
-                    LoadPosts?.Invoke(feed.Posts, false);
+                    LoadPosts?.Invoke(feed.Posts, false, false);
                 };
                 PanelSubscriptions.Children.Add(feed_item);
             }
@@ -64,12 +64,12 @@ namespace Fidd
             if (sender == FeedFilterAll)
             {
                 FeedFilterAll.Selected = true;
-                LoadPosts?.Invoke(App.FeedManager.Posts, true);
+                LoadPosts?.Invoke(App.FeedManager.Posts, true, false);
             }
             else if (sender == FeedFilterUnread)
             {
                 FeedFilterUnread.Selected = true;
-                LoadPosts?.Invoke(App.FeedManager.Posts.Where(p => !p.Read).ToList(), true);
+                LoadPosts?.Invoke(App.FeedManager.Posts.Where(p => !p.Read).ToList(), true, false);
             }
             else if (sender == FeedFilterBookmarks)
             {
@@ -77,7 +77,7 @@ namespace Fidd
                 LoadPosts?.Invoke(
                     (from bookmark in App.FeedManager.Bookmarks
                     orderby bookmark.DateBookmarked descending
-                    select App.FeedManager.MockPostFromBookmark(bookmark)).ToList(), true);
+                    select App.FeedManager.MockPostFromBookmark(bookmark)).ToList(), true, true);
             }
         }
 

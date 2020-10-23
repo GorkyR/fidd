@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Fidd"
         mc:Ignorable="d"
         Title="Updating Feeds..." SizeToContent="Height" Width="400"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Loaded="Window_Loaded">
     <StackPanel Orientation="Vertical" Margin="8">
         <ProgressBar x:Name="ProgressFeedUpdate" Height="20"/>

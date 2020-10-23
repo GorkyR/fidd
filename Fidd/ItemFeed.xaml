@@ -17,16 +17,16 @@
         </Grid.ContextMenu>
         <Grid Margin="4, 6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Image x:Name="ImageIcon" Height="12" Width="12" Margin="0, 0, 4, 0" Source="/Icons/rss_feed.png"/>
-            <TextBlock x:Name="TextFeedName" Text="Feed Title" HorizontalAlignment="Stretch" Grid.Column="1" FontWeight="Medium"/>
-            <Rectangle x:Name="BoxUnread"  Fill="#7F000000" Width="18" Height="15" RadiusX="5" RadiusY="5" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock x:Name="TextFeedName" Text="Feed Title" HorizontalAlignment="Stretch" Grid.Column="1" FontWeight="Medium" Margin="0,0,6,0"/>
+            <Rectangle x:Name="BoxUnread"  Fill="#7F888888" Width="18" Height="15" RadiusX="5" RadiusY="5" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <TextBlock x:Name="TextUnread" Text="0" FontSize="11" Foreground="White" Margin="0, 0, 0, 1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
-        <Rectangle x:Name="Overlay" Fill="#3F0064FF" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" MouseLeave="EndHover" Opacity="0"/>
+        <Rectangle x:Name="Overlay" Fill="#3F333333" MouseDown="RememberMouseDown" MouseUp="CheckClick" MouseEnter="CheckMouseState" MouseLeave="EndHover" Opacity="0"/>
     </Grid>
 </UserControl>

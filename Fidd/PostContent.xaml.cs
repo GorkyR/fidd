@@ -27,8 +27,10 @@ namespace Fidd
         const int font_size = 20;
         static string css_style = @$"
             div.post-title, div.post-body {{ max-width: {max_width}px; margin: 0 auto; }}
+            div.post-body {{ word-break: break-word; }}
             body {{ font-family: ""Segoe UI"", Verdana, Calibri, sans-serif; font-size: {font_size}px; margin: 30px; color: #222 }}
-            pre, code {{ font-family: Fira Code, monospace; font-size: {font_size * 0.75}px; color: #333; background-color: #eee; }}
+            pre, code {{ font-family: Fira Code, monospace; font-size: {font_size * 0.7}px; color: #333; background-color: #eee; }}
+            pre {{ padding: 8px; border-radius: 8px; white-space: pre-wrap; border: 0.5px solid rgba(0, 0, 0, .125); }}
             a, a:visited {{ color: blue; text-decoration: none; }}
             div.post-title > a {{ color: #222; }}
             div.post-title > a:hover {{ color: blue;  }}
@@ -38,13 +40,29 @@ namespace Fidd
             div.post-body h2 {{ font-size: {font_size * 1.4 }px; }}
             div.post-body h3 {{ font-size: {font_size * 1.25}px; }}
 
-            img, figure {{ max-width: 100%; display: block; border-radius: 5px; }}
+            img, figure {{ max-width: 95%; display: block; border-radius: 5px; margin: 0 auto; }}
+            img {{ box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08); }}
+            img:only-child {{ display: block; margin: 0 auto; }}
             p > img {{ display: inline-block; }}
             figcaption {{ font-size: {font_size * 0.75}px !important; text-alignment: center !important;  }}
 
             blockquote {{ border-left: 1px solid #777777; padding-left: 16px; margin: 0; color: #444; }}
             li {{ margin-bottom: 16px; }}
-        ";
+
+            div.post-body div {{ padding-bottom: 4px !important; }}
+
+            table {{ display: block; max-width: 100% !important; border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; }}
+            table tbody, table div {{ display: block; max-width: 100%; }}
+            table, th, td {{ border: 0px solid transparent; }}
+            table td > * {{ max-width: 100%; }}
+            /* table tr {{ display: flex; flex-wrap: wrap; }} /**/
+            /* table tr > * {{ flex: 1 1 350px; }}; /**/
+
+            table tr > td {{ display: inline-block; margin: 0 auto; }}
+            table tr > td:nth-last-child(2), table tr > td:nth-last-child(2) ~ * {{ width: 50%;   max-width: 50%;   }}
+            table tr > td:nth-last-child(3), table tr > td:nth-last-child(3) ~ * {{ width: 33.3%; max-width: 33.3%; }}
+            table tr > td:nth-last-child(4), table tr > td:nth-last-child(4) ~ * {{ width: 25%;   max-width: 25%;   }}
+    	";
 
         Feed.Post _post = null;
         public Feed.Post Post
@@ -60,6 +78,7 @@ namespace Fidd
                         <html>
                             <head>
                                 <meta charset=""UTF-8"">
+                                <meta http-equiv=""X-UA-Compatible"" content=""IE=11""/>
                                 <style type=""text/css"">{css_style}</style>
                               </head>
                             <body>
@@ -174,6 +193,5 @@ namespace Fidd
 
             return mode;
         }
-
     }
 }

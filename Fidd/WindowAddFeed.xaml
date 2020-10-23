@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Fidd"
         mc:Ignorable="d"
         Title="Add Feed" SizeToContent="Height" Width="400"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <StackPanel Orientation="Vertical" Margin="8">
         <TextBlock Text="Feed URL: "/>
         <TextBox x:Name="EditFeedUrl" Margin="0, 4"/>
