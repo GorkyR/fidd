@@ -342,15 +342,16 @@ public class FeedManager
                 node.Remove();
         }
 
+        RemoveElementsNamed("col");
+        RemoveElementsNamed("style");
         RemoveElementsNamed("script");
         RemoveElementsNamed("iframe");
-        RemoveElementsNamed("style");
 
         foreach (var node in doc.DocumentNode.Descendants())
         {
             node.Attributes.Remove("style");
-            node.Attributes.Remove("srcset");
             node.Attributes.Remove("class");
+            node.Attributes.Remove("srcset");
         }
 
         var images = doc.DocumentNode.Descendants("img").ToList();
