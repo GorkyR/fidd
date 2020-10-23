@@ -36,24 +36,23 @@ namespace FiddService
         {
             foreach (var feeds_path in FiddFolders)
             {
-                try
+                var manager = new FeedManager(feeds_path);
+                foreach (var feed in manager.Feeds)
                 {
-                    var manager = new FeedManager(feeds_path);
-                    foreach (var feed in manager.Feeds)
-                        await manager.FetchAndUpdateFeedAsync(feed);
+                    try { await manager.FetchAndUpdateFeedAsync(feed); }
+                    catch (Exception e)
+                    {
+                        await File.AppendAllTextAsync(
+                            Path.Combine(feeds_path, "poller_error.log"),
+                            $"[{DateTime.Now} - {feed.ID}]: {e}\n"
+                        );
+                    }
+                }
 
-                    await File.WriteAllTextAsync(
-                        Path.Combine(feeds_path, "poller_last_updated.log"),
-                        DateTime.Now.ToString()
-                    );
-                }
-                catch (Exception e)
-                {
-                    await File.AppendAllTextAsync(
-                        Path.Combine(feeds_path, "poller_error.log"),
-                        $"{DateTime.Now.ToString()}: {e.Message}"
-                    );
-                }
+                await File.WriteAllTextAsync(
+                    Path.Combine(feeds_path, "poller_last_updated.log"),
+                    DateTime.Now.ToString()
+                );
             }
         }
 
