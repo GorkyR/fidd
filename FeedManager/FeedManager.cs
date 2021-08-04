@@ -21,15 +21,22 @@ public class FeedManager
     public FeedManager(string directory)
     {
         FeedDirectory = directory;
-        if (Directory.Exists(directory))
+        LoadFeedsFromStorage();
+    }
+
+    public void LoadFeedsFromStorage()
+    {
+        Feeds.Clear();
+        Bookmarks.Clear();
+        if (Directory.Exists(FeedDirectory))
         {
-            foreach (var feed_file in Directory.GetFiles(directory, "*.feed"))
+            foreach (var feed_file in Directory.GetFiles(FeedDirectory, "*.feed"))
             {
                 Feed feed;
                 using (var file = new StreamReader(feed_file))
                     feed = Feed.Deserialize(Path.GetFileNameWithoutExtension(feed_file), file.ReadToEnd());
 
-                foreach (var post_file in Directory.GetFiles(Path.Combine(directory, feed.ID), "*.post"))
+                foreach (var post_file in Directory.GetFiles(Path.Combine(FeedDirectory, feed.ID), "*.post"))
                 {
                     Feed.Post post;
                     using (var file = new StreamReader(post_file))
@@ -41,7 +48,7 @@ public class FeedManager
 
                 Feeds.Add(feed);
             }
-            foreach (var bookmark_file in Directory.GetFiles(Path.Combine(directory, "bookmarks"), "*.bookmark"))
+            foreach (var bookmark_file in Directory.GetFiles(Path.Combine(FeedDirectory, "bookmarks"), "*.bookmark"))
             {
                 Bookmark bookmark;
                 using (var file = new StreamReader(bookmark_file))
@@ -49,8 +56,7 @@ public class FeedManager
                 Bookmarks.Add(bookmark);
             }
         }
-        else
-            Directory.CreateDirectory(Path.Combine(directory, "bookmarks"));
+        else Directory.CreateDirectory(Path.Combine(FeedDirectory, "bookmarks"));
     }
 
     public async Task AddFeedAsync(string feed_url)
@@ -115,7 +121,7 @@ public class FeedManager
                 try
                 {
                     var web_client = new WebClient();
-                    web_client.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0");
+                    web_client.Headers.Add(HttpRequestHeader.UserAgent, "Fidd RSS Reader v1.0");
                     var favicon_api_response = await web_client.DownloadStringTaskAsync($"http://favicongrabber.com/api/grab/{feed_host}");
                     var deserialized_response = JsonConvert.DeserializeObject<FaviconGrabberResponse>(favicon_api_response);
                     if (deserialized_response.Icons.Count > 0)
@@ -205,8 +211,16 @@ public class FeedManager
 
     public async Task UpdateFeedMetadataAsync(Feed feed)
     {
-        using (var feed_file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed.ID}.feed")))
-            await feed_file.WriteAsync(feed.Serialize());
+        try {
+            using (var feed_file = new StreamWriter(Path.Combine(FeedDirectory, $"{feed.ID}_updated.feed"))) {
+                await feed_file.WriteAsync(feed.Serialize());
+            }
+            File.Move(Path.Combine(FeedDirectory, $"{feed.ID}_updated.feed"), Path.Combine(FeedDirectory, $"{feed.ID}.feed"), true);
+        } catch (Exception ex) {
+            using (var log_file = new StreamWriter(Path.Combine(FeedDirectory, "feed_update_error.log"), true)) {
+                await log_file.WriteLineAsync($"[{DateTime.Now:dd/MM/yyyy hh:mm t} - {feed.ID}] {ex.GetType().Name} : {ex.Message}");
+            }
+        }
     }
     public string LoadPostContent(Feed.Post post)
     {

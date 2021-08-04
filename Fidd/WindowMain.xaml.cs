@@ -38,11 +38,12 @@ namespace Fidd
         public void ClosePost()
         {
             PostContent.Post = null;
+            Title = "Fidd";
         }
         public async Task OpenPostAsync(Feed.Post post)
         {
             PostContent.Post = post;
-            Title = $"Fidd — {post.ParentFeed.Title} — {post.Title}";
+            Title = $"{post.Title} — {post.ParentFeed.Title} — Fidd";
             await App.FeedManager.MarkPostReadAsync(post);
             ListFeeds.UpdateListWhilePreservingSelection();
         }

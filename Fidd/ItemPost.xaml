@@ -49,12 +49,10 @@
                 <StackPanel Orientation="Horizontal"
                             Grid.Row="1"
                             Grid.ColumnSpan="100">
-                    <TextBlock x:Name="TextFrom"   Text="from "          Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextFeed"   Text="feed"           Style="{StaticResource Caption}" FontWeight="Bold" Margin="0, 0, 3, 0"/>
-                    <TextBlock x:Name="TextBy"     Text="by "            Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextAuthor" Text="postauthor"     Style="{StaticResource Caption}" FontWeight="Bold" Margin="0, 0, 3, 0"/>
-                    <TextBlock                     Text="on "            Style="{StaticResource Caption}"/>
-                    <TextBlock x:Name="TextDate"   Text="published_date" Style="{StaticResource Caption}" FontWeight="Bold"/>
+                    <TextBlock x:Name="TextDate"   Text="-delta_date" Style="{StaticResource Caption}" FontWeight="Bold"/>
+                    <TextBlock                     Text=" ago"        Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextFrom"   Text=", from "     Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="TextFeed"   Text="feed"        Style="{StaticResource Caption}" FontWeight="Bold" Margin="0, 0, 3, 0"/>
                 </StackPanel>
                 <TextBlock x:Name="TextDescription"
                            Grid.Row="3" Grid.Column="1"

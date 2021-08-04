@@ -29,7 +29,9 @@
             </Button>
             <TextBlock Text="Subscriptions" Margin="4" FontWeight="Medium"/>
         </DockPanel>
-        <StackPanel x:Name="PanelSubscriptions" Orientation="Vertical" Grid.Column="1" Grid.Row="4" HorizontalAlignment="Stretch"/>
+        <ScrollViewer  Grid.Column="1" Grid.Row="4" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="PanelSubscriptions" Orientation="Vertical" HorizontalAlignment="Stretch"/>
+        </ScrollViewer>
         <Button Grid.Row="5" Grid.ColumnSpan="2" Click="UpdateFeedsContent">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Update Feeds"/>

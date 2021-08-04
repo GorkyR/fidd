@@ -44,7 +44,7 @@ namespace FiddService
                     {
                         await File.AppendAllTextAsync(
                             Path.Combine(feeds_path, "poller_error.log"),
-                            $"[{DateTime.Now} - {feed.ID}]: {e}\n"
+                            $"[{DateTime.Now} - {feed.ID}]: {e.GetType().FullName} - {e.Message}\n"
                         );
                     }
                 }

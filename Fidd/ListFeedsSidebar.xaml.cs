@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,6 +20,7 @@ namespace Fidd
     /// </summary>
     public partial class ListFeedsSidebar : UserControl
     {
+        Timer periodic_feed_refresher;
         Action<List<Feed.Post>, bool, bool> _update_posts = null;
         public Action<List<Feed.Post>, bool, bool> LoadPosts {
             get => _update_posts;
@@ -32,6 +34,10 @@ namespace Fidd
         {
             InitializeComponent();
             UpdateFeedList();
+
+            //periodic_feed_refresher = new Timer(1_000 * 60 * 5);
+            //periodic_feed_refresher.Elapsed += (s, e) => PeriodicFeedRefresh();
+            //periodic_feed_refresher.Start();
         }
         private void ClearSelectedFeeds()
         {
@@ -115,6 +121,11 @@ namespace Fidd
         {
             (new WindowUpdateFeeds()).ShowDialog();
             UpdateListWhilePreservingSelection();
+        }
+
+        private void PeriodicFeedRefresh()
+        {
+            App.FeedManager.LoadFeedsFromStorage();
         }
     }
 }

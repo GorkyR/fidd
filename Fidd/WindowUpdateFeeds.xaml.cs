@@ -30,11 +30,9 @@ namespace Fidd
                 ProgressFeedUpdate.Value = i + 1;
                 var feed = App.FeedManager.Feeds[i];
                 TextStatus.Text = $"{i + 1}/{App.FeedManager.Feeds.Count} {feed.Title}";
-                await App.FeedManager.FetchAndUpdateFeedAsync(feed,
-                    (n_posts) => {
-                        TextStatus.Text += $": Adding {n_posts} new post{(n_posts == 1?"":"s")}";
-                    }
-                );
+                await App.FeedManager.FetchAndUpdateFeedAsync(feed, (n_posts) => {
+                    TextStatus.Text += $": Adding {n_posts} new post{(n_posts == 1?"":"s")}";
+                });
             }
             Close();
         }

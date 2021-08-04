@@ -30,25 +30,6 @@ namespace Fidd
             get => TextDescription.Text;
             set { TextDescription.Text = value; }
         }
-        public string Author
-        {
-            get => TextAuthor.Text;
-            set
-            {
-                if (value is null)
-                {
-                    TextBy.Visibility = Visibility.Collapsed;
-                    TextAuthor.Visibility = Visibility.Collapsed;
-                    TextAuthor.Text = null;
-                }
-                else
-                {
-                    TextBy.Visibility = Visibility.Visible;
-                    TextAuthor.Text = value;
-                    TextAuthor.Visibility = Visibility.Visible;
-                }
-            }
-        }
 
         bool _selected = false;
         public bool Selected
@@ -61,18 +42,18 @@ namespace Fidd
             }
         }
 
-        static CultureInfo us_format = new CultureInfo("en-US");
-
         DateTime date;
         public DateTime Published
         {
             get => date;
             set
             {
-                TextDate.Text = value.ToString("dddd, d MMM yyyy", us_format);
+                TextDate.Text = (DateTime.Now - value).ToApproximateDeltaString();
                 date = value;
             }
         }
+
+
 
         bool _read;
         public bool Read {
@@ -124,9 +105,7 @@ namespace Fidd
         public ItemPost()
         {
             InitializeComponent();
-
             Feed = null;
-            Author = null;
         }
         public ItemPost(Feed.Post post, bool display_feed_title, bool disable_fade_on_read = false) : this()
         {
@@ -217,6 +196,34 @@ namespace Fidd
                 await App.FeedManager.BookmarkPostAsync(Post);
                 Bookmarked = true;
             }
+        }
+    }
+
+    static class TimeSpanExtensions
+    {
+        public static string ToApproximateDeltaString(this TimeSpan delta_time)
+        {
+            var days   = (double)delta_time.Days;
+            var months = days / 30;
+            var years  = days / 365;
+            if (years >= 1)
+            {
+                int ys = (int)Math.Round(years);
+                return $"~{ys:0} year{(ys == 1 ? "" : "s")}";
+            }
+            else if (months >= 2)
+            {
+                int mths = (int)Math.Round(months);
+                return $"~{mths:0} month{(mths == 1 ? "" : "s")}";
+            }
+            else if (days >= 1)
+                return $"{days} day{(days == 1 ? "" : "s")}";
+            else if (delta_time.Hours >= 1)
+                return $"{delta_time.Hours} hour{(delta_time.Hours == 1 ? "" : "s")}";
+            else if (delta_time.Minutes >= 1)
+                return $"{delta_time.Minutes} minute{(delta_time.Minutes == 1? "" : "s")}";
+            else
+                return "$~1 minute";
         }
     }
 }
